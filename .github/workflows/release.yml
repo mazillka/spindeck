@@ -13,9 +13,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Check version matches tag
         run: |
@@ -31,7 +31,7 @@ jobs:
           awk -v ver="$v" '$0 == "## "ver {on=1; next} /^## / && on {exit} on' RELEASE_NOTES.md > notes.md
           [ -s notes.md ] || echo "Spindeck $v" > notes.md
 
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: release/spindeck-*.zip
           body_path: notes.md
