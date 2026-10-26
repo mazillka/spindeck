@@ -33,7 +33,7 @@ A preview of 1.5.0 for anyone who wants to try it early. 1.4.1 only checks for s
 https://github.com/justinca92/spindeck/releases/download/v1.5.0-rc.1/spindeck-1.5.0-rc.1.zip
 
 ---
-Pre-release: not yet tested on a Steam Deck. Bugs and ideas: [Issues](https://github.com/justinca92/spindeck/issues)
+Pre-release: tested on Steam Deck LCD in game mode. Bugs and ideas: [Issues](https://github.com/justinca92/spindeck/issues)
 Free and open source. If you enjoy it: [Ko-fi](https://ko-fi.com/jhw0806) ☕
 
 ## 1.4.1
