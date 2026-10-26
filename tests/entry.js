@@ -7,7 +7,7 @@ const B = { OK: 1, CANCEL: 2, SECONDARY: 3, OPTIONS: 4, DIR_UP: 9, DIR_DOWN: 10,
 window.__focusables = [];
 function Focusable(props) {
   if (location.hash === "#crash" && props.onOptionsButton) throw new Error("simulated Steam change");
-  const { children, style, onGamepadDirection, onButtonDown, onButtonUp, onOKButton, onOptionsButton, onMenuButton, onCancelButton, onGamepadFocus, onGamepadBlur, autoFocus, noFocusRing, "flow-children": fc, ...rest } = props;
+  const { children, style, onGamepadDirection, onButtonDown, onButtonUp, onOKButton, onSecondaryButton, onOptionsButton, onMenuButton, onCancelButton, onGamepadFocus, onGamepadBlur, autoFocus, noFocusRing, "flow-children": fc, ...rest } = props;
   const ref = React.useRef(null);
   React.useEffect(() => { ref.current.__props = props; });
   return h("div", { ref, style, tabIndex: 0, "data-focusable": "", ...rest }, children);
