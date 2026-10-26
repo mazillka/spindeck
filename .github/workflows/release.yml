@@ -48,6 +48,8 @@ jobs:
           v=$(node -p "require('./package.json').version")
           awk -v ver="$v" '$0 == "## "ver {on=1; next} /^## / && on {exit} on' RELEASE_NOTES.md > release/notes.md
           [ -s release/notes.md ] || echo "Spindeck $v" > release/notes.md
+          # The install link names the repository publishing it (the same on upstream; a fork's own release on a fork).
+          sed -i "s#github.com/justinca92/spindeck/releases/download/#github.com/${GITHUB_REPOSITORY}/releases/download/#g" release/notes.md
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
