@@ -202,12 +202,16 @@ interface RingProps {
   accentColor: string;
 }
 
-/** The capsule ring — the only part that re-renders every animation frame. */
+/**
+ * The capsule ring. React renders it only when the set of games on it changes
+ * (a new selection, or the motion passing a whole game); every animation frame
+ * in between moves the capsules directly (place()), so a fast spin doesn't
+ * re-render ~13 capsules 60 times a second.
+ */
 const WheelRing = memo(function WheelRing(p: RingProps) {
   const { games, sel, motion, W, H, flip } = p;
   const n = games.length;
-  const [vis, setVis] = useState(motion.pos);
-  useEffect(() => motion.subscribe(setVis), [motion]);
+  const [, rerender] = useState(0);
 
   const bottom = p.layout === "bottom";
   const { cx, cy, R } = wheelGeom(p.layout, flip, W, H, p.wheelSizePct);
@@ -232,16 +236,8 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
     }
   }, [sel, games]);
 
-  if (!n) return null;
-  // Integer part picks the games, fraction slides them.
-  const vRel = vis - motion.target; // ≤ 0 while catching up forward
-  const base = Math.round(vRel);
-  const frac = vRel - base;
-  const items = [];
-  for (let off = -span; off <= span; off++) {
-    const idx = (((sel + base + off) % n) + n) % n;
-    const g = games[idx];
-    const rel = off - frac; // continuous distance from the pointer
+  /** Where a capsule `rel` games from the pointer sits, and how it looks there. */
+  const frameAt = (rel: number) => {
     // Next games sit clockwise from the selection.
     // Side, right wheel: π = pointing left at the art. Left wheel: 0 = pointing right.
     // Bottom: π/2 = straight up; a little extra room on each side of the selection.
@@ -250,26 +246,65 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
     const x = cx + R * Math.cos(theta);
     const y = cy - R * Math.sin(theta);
     const dist = Math.abs(rel);
-    const selected = idx === sel;
     const scale = dist < 1 ? 1 - 0.23 * dist : Math.max(0.55, 0.82 - dist * 0.05);
+    // Anchor the capsule's centre on the arc; the title extends away from the art.
+    // Bottom: centred on the arc, leaning along it; no side titles (the
+    // selected game's name sits above it, drawn by the page).
+    const transform = bottom
+      ? `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${((phi * 180) / Math.PI).toFixed(2)}deg) scale(${scale})`
+      : flip
+        ? `translate(${x}px, ${y}px) translate(calc(-100% + ${capW / 2}px), -50%) scale(${scale})`
+        : `translate(${x}px, ${y}px) translate(${-capW / 2}px, -50%) scale(${scale})`;
     // Capsules stay opaque so overlaps read as a stack; distance darkens instead.
     const shade = dist < 1 ? 1 - 0.32 * dist : Math.max(0.35, 0.8 - dist * 0.12);
     const nameFade = Math.max(0, Math.min(1, (NAMES_EACH_SIDE + 0.6 - dist) / 0.6));
+    return { transform, zIndex: 100 - Math.round(dist * 10), shade, nameFade };
+  };
+
+  // Integer part picks the games (fixed for this render), fraction slides them.
+  const vRel = motion.pos - motion.target; // ≤ 0 while catching up forward
+  const base = Math.round(vRel);
+  type Slot = { item: HTMLDivElement | null; shade: HTMLDivElement | null; name: HTMLDivElement | null; selected: boolean };
+  const nodes = useRef<Slot[]>([]);
+  nodes.current.length = 2 * span + 1;
+  const place = (vis: number) => {
+    const v = vis - motion.target;
+    if (Math.round(v) !== base) return rerender((r) => r + 1); // another game reached the pointer
+    const frac = v - base;
+    for (let k = 0; k < nodes.current.length; k++) {
+      const el = nodes.current[k];
+      if (!el?.item) continue;
+      const f = frameAt(k - span - frac);
+      el.item.style.transform = f.transform;
+      el.item.style.zIndex = String(f.zIndex);
+      if (el.shade) el.shade.style.opacity = String(el.selected ? 0 : 1 - f.shade);
+      if (el.name) el.name.style.opacity = String((el.selected ? 1 : Math.max(0.35, f.shade)) * f.nameFade);
+    }
+  };
+  const placeRef = useRef(place);
+  placeRef.current = place;
+  useEffect(() => motion.subscribe((vis) => placeRef.current(vis)), [motion]);
+
+  if (!n) return null;
+  const frac = vRel - base;
+  const items = [];
+  for (let off = -span; off <= span; off++) {
+    const k = off + span;
+    const idx = (((sel + base + off) % n) + n) % n;
+    const g = games[idx];
+    const selected = idx === sel;
+    const f = frameAt(off - frac);
+    const slot: Slot = (nodes.current[k] ??= { item: null, shade: null, name: null, selected });
+    slot.selected = selected;
     items.push(
       <div
         key={g.appid}
+        ref={(el: HTMLDivElement | null) => void (slot.item = el)}
         style={{
           position: "absolute",
           left: 0,
           top: 0,
-          // Anchor the capsule's centre on the arc; the title extends away from the art.
-          // Bottom: centred on the arc, leaning along it; no side titles (the
-          // selected game's name sits above it, drawn by the page).
-          transform: bottom
-            ? `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${((phi * 180) / Math.PI).toFixed(2)}deg) scale(${scale})`
-            : flip
-              ? `translate(${x}px, ${y}px) translate(calc(-100% + ${capW / 2}px), -50%) scale(${scale})`
-              : `translate(${x}px, ${y}px) translate(${-capW / 2}px, -50%) scale(${scale})`,
+          transform: f.transform,
           transformOrigin: bottom ? "center" : flip ? "right center" : "left center",
           flexDirection: flip ? "row-reverse" : "row",
           display: "flex",
@@ -277,7 +312,7 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
           // Title ↔ capsule spacing: a bit more for the games around the selection
           // (they're scaled down, which also shrinks the gap).
           gap: selected ? 16 : 28,
-          zIndex: 100 - Math.round(dist * 10),
+          zIndex: f.zIndex,
           pointerEvents: "none",
           // Own compositor layer: per-frame moves are then just a transform.
           willChange: "transform",
@@ -299,12 +334,13 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
               brightness() — a filter repaints the image every frame, opacity
               is a cheap compositor change. */}
           <div
+            ref={(el: HTMLDivElement | null) => void (slot.shade = el)}
             style={{
               position: "absolute",
               inset: 0,
               borderRadius: 8,
               background: "#000",
-              opacity: selected ? 0 : 1 - shade,
+              opacity: selected ? 0 : 1 - f.shade,
               willChange: "opacity",
             }}
           />
@@ -312,12 +348,13 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
         {/* Always rendered (opacity only) — mounting/unmounting names at the
             edge while spinning cost extra layout. */}
           {!bottom && <div
+            ref={(el: HTMLDivElement | null) => void (slot.name = el)}
             style={{
               maxWidth: Math.max(200, 300 * p.textScale),
               fontSize: (selected ? BASE_TITLE_PX : BASE_TITLE_PX_SIDE) * p.textScale,
               fontWeight: selected ? 700 : 500,
               color: "#fff",
-              opacity: (selected ? 1 : Math.max(0.35, shade)) * nameFade,
+              opacity: (selected ? 1 : Math.max(0.35, f.shade)) * f.nameFade,
               textShadow: "0 2px 6px #000",
               // Long names wrap to two lines, then end with an ellipsis.
               display: "-webkit-box",

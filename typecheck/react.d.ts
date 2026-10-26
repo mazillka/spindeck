@@ -4,6 +4,7 @@ declare module "react" {
   export type CSSProperties = { [k: string]: any };
   export function useState<T>(init: T | (() => T)): [T, (v: T | ((p: T) => T)) => void];
   export function useEffect(fn: () => void | (() => void), deps?: readonly any[]): void;
+  export function useLayoutEffect(fn: () => void | (() => void), deps?: readonly any[]): void;
   export function useMemo<T>(fn: () => T, deps: readonly any[]): T;
   export function useRef<T>(init: T): { current: T };
   export function useRef<T>(init: T | null): { current: T | null };
