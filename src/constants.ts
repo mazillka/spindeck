@@ -40,7 +40,8 @@ export const FRAME_FALLBACK_MS = 40;
 export const SCROLL_SETTLE_MS = 140;
 /** Header bar re-apply interval while home is shown, and full re-scan interval. */
 export const HEADER_REAPPLY_MS = 1000;
-export const HEADER_RESCAN_MS = 5000;
+/** Full page re-scan for Steam's top bar (also done at once when a known bar element leaves the page). */
+export const HEADER_RESCAN_MS = 15_000;
 
 /** Roulette: minimum steps, start/extra delay per step, ease exponent, result display. */
 export const ROULETTE_MIN_STEPS = 22;
