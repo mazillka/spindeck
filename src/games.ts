@@ -156,8 +156,14 @@ export function openGamePage(g: GameEntry) {
   }
 }
 
+/** Run the game; if Steam's (non-public) launch call fails, open its page, which has Play. */
 export function launch(g: GameEntry) {
-  SteamClient.Apps.RunGame(g.gameid, "", -1, 100);
+  try {
+    SteamClient.Apps.RunGame(g.gameid, "", -1, 100);
+  } catch (e) {
+    debug("launch", "RunGame failed, opening the game page", e);
+    openGamePage(g);
+  }
 }
 
 export interface AchievementProgress {
