@@ -1,0 +1,74 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { calls } from "@decky/api";
+
+globalThis.__PLUGIN_VERSION__ = "1.4.1";
+globalThis.window = globalThis;
+globalThis.backend = { prepare_update: async () => true };
+const { newer, checkNow, useUpdateCheck, startUpdate } = await import("../../src/updater.ts");
+
+const DIGEST = "a".repeat(64);
+const ZIP = "https://github.com/justinca92/spindeck/releases/download/v1.5.0/spindeck-1.5.0.zip";
+function release({ tag = "v1.5.0", assets = [{ name: "spindeck-1.5.0.zip", browser_download_url: ZIP, digest: `sha256:${DIGEST}` }], ok = true } = {}) {
+  globalThis.fetch = async () => ({ ok, status: ok ? 200 : 403, json: async () => ({ tag_name: tag, assets, html_url: "https://github.com/x" }) });
+}
+
+test("newer compares numerically, part by part", () => {
+  assert.equal(newer("1.10.0", "1.9.2"), true);
+  assert.equal(newer("1.4.1", "1.4.1"), false);
+  assert.equal(newer("1.4", "1.4.1"), false);
+  assert.equal(newer("2.0.0", "10.0.0"), false);
+});
+
+test("check: a newer release is offered with its GitHub digest", async () => {
+  release();
+  await checkNow();
+  const st = useUpdateCheck();
+  assert.equal(st.kind, "available");
+  assert.equal(st.info.version, "1.5.0");
+  assert.equal(st.info.hash, DIGEST);
+  assert.equal(st.info.url, ZIP);
+});
+
+test("check: same or older release → up to date", async () => {
+  release({ tag: "v1.4.1" });
+  await checkNow();
+  assert.deepEqual(useUpdateCheck(), { kind: "latest", version: "1.4.1" });
+});
+
+test("check: API error or no plugin zip → error", async () => {
+  release({ ok: false });
+  await checkNow();
+  assert.equal(useUpdateCheck().kind, "error");
+  release({ assets: [{ name: "source.tar.gz", browser_download_url: ZIP }] });
+  await checkNow();
+  assert.equal(useUpdateCheck().kind, "error");
+});
+
+function decky() {
+  const installs = [];
+  globalThis.DeckyBackend = { call: async (...a) => installs.push(a) };
+  calls.length = 0;
+  return installs;
+}
+const info = { version: "1.5.0", url: ZIP, hash: DIGEST, page: "" };
+
+test("update: hands Decky the zip with its hash, after marking the update", async () => {
+  const installs = decky();
+  assert.equal(await startUpdate(info), true);
+  assert.deepEqual(installs, [["utilities/install_plugin", ZIP, "Spindeck", "1.5.0", DIGEST, 2]]);
+  assert.deepEqual(calls.map(([n]) => n), ["prepare_update"], "settings protected before the uninstall");
+});
+
+test("update: refused without a digest (Decky would skip its check)", async () => {
+  const installs = decky();
+  assert.equal(await startUpdate({ ...info, hash: "" }), false);
+  assert.deepEqual(installs, []);
+});
+
+test("update: refused from anywhere but this repo's releases", async () => {
+  const installs = decky();
+  assert.equal(await startUpdate({ ...info, url: "https://example.com/spindeck-1.5.0.zip" }), false);
+  assert.equal(await startUpdate({ ...info, url: "https://github.com/someone/spindeck/releases/download/v1/spindeck-1.5.0.zip" }), false);
+  assert.deepEqual(installs, []);
+});
