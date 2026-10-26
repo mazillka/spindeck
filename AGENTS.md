@@ -13,9 +13,9 @@ Notes for coding agents working on Spindeck, a [Decky Loader](https://decky.xyz)
   - `games.ts` library reads from Steam's internal stores (`appStore`, `collectionStore`, `SteamClient`)
   - `updater.ts` in-panel update via GitHub releases + Decky's installer
 - `main.py` — Python backend: settings file, update marker, uninstall cleanup
-- `dist/index.js` — built bundle, **committed**; rebuild after changing `src/`
+- `dist/index.js` — built bundle, **not committed** (`.gitignore`): `bun build/build.ts` locally, and the release workflow builds it for the zip
 - `typecheck/` — offline type stubs for Decky/React
-- `tests/unit/` — unit tests on `src/*.ts` (`node --test`, no dependencies); `tests/py/` — backend tests; older browser regression scripts ([tests/README.md](tests/README.md))
+- `tests/unit/` — unit tests on `src/*.ts` (`node --test`, no dependencies); `tests/py/` — backend tests ([tests/README.md](tests/README.md))
 - `devtools/mock/` — the plugin + real `main.py` in a browser stand-in for Steam / Decky, and the Playwright smoke + E2E tests ([its README](devtools/mock/README.md))
 - `build/` — offline bun build with shims (no `npm install` needed)
 - `.github/workflows/` — `ci.yml` (every push / PR), `release.yml` (`v*` tags)
@@ -74,11 +74,11 @@ Every test must be able to fail when the behaviour it names breaks. Delete fake 
 - Redundant: same behaviour and branch as another test with no new input or edge case; keep the cheaper or more specific one.
 - To check a test is real, break the code it covers, confirm it fails, then revert.
 - Unit tests import `src/*.ts` through `tests/unit/register.mjs` (stubs for `react` / `@decky/*`); a module whose state matters is imported fresh per case (`?case=N`). Only `.ts` files load this way, so logic worth testing doesn't belong in a `.tsx` file.
-- Browser tests: assert on what the plugin asked of Steam / Decky through the mock's event log (`mock.events(kind)`), not on internals; stub GitHub with `page.route`. Time things with a `MutationObserver`, not `setTimeout` polling (background timers are throttled to ~1 s).
+- Browser tests: assert on what the plugin asked of Steam / Decky through the mock's event log (`mock.events(kind)`), not on internals; stub GitHub with `page.route`. A bug that only shows with another plugin, a Steam re-render or an unload gets a regression in `devtools/mock/e2e/regressions.spec.ts` (the mock has URL options and `mock.*` hooks for those). Time things with a `MutationObserver`, not `setTimeout` polling (background timers are throttled to ~1 s).
 
 ### Release
 
 - Release only when the plugin zip changes (`src/` → `dist/`, `main.py`, `plugin.json`, `package.json`). Docs-only changes don't need one: every release pings users who check for updates.
-- Bump `package.json` (the build injects it as `PLUGIN_VERSION`), rebuild and commit `dist/`, add `## X.Y.Z` to `RELEASE_NOTES.md` and `CHANGELOG.md`, then push tag `vX.Y.Z` only after CI passes.
+- Bump `package.json` (the build injects it as `PLUGIN_VERSION`), add `## X.Y.Z` to `RELEASE_NOTES.md` and `CHANGELOG.md`, then push tag `vX.Y.Z` only after CI passes.
 - If the release workflow fails after the tag is pushed, fix it and release the next version; never move a published tag.
 - Release notes (`RELEASE_NOTES.md`, used as the release body): cover everything since the previous tag as it ends up, grouped under **New**, **Changed** and **Fixed** (omit empty groups), in plain language a Steam Deck user understands. Keep internal-only work to an optional short **Under the hood** list, and end with **Try it on your Deck** when the release touches UI, controls or installing.

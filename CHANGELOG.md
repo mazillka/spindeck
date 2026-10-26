@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- **Unknown home layout:** ▼ to the sections now moves focus off the hidden wheel (`revealSections` focuses the first item when it can't read the layout). Before, ▲ then went to search instead of back to the wheel.
+- **Steam re-rendering its whole home** while the sections are shown: the new recent row is hidden too and the sections are put back in place (checked every `HEADER_REAPPLY_MS`). Before, the band stretched over the unhidden row.
+
+### Changed
+- **Wheel animation:** `WheelRing` renders only when the set of games on it changes (a step, or the motion passing a whole game); each frame in between writes the capsules' transform, z-index and opacities directly.
+- **Top bar scan:** a `TreeWalker` skips Spindeck's own layer, and Steam's home inside it, as one subtree. The full re-scan runs every 15 s instead of 5 s, and still at once when a known bar element leaves the page.
+- **`dist/` is no longer committed:** the release workflow builds it, and `bun build/build.ts` locally.
+- **Tests:** the old `tests/*.mjs` scripts, which only ran on one machine, are replaced by Playwright specs in CI (`regressions.spec.ts`, `home.spec.ts`). The mock now patches routes like Decky does and runs production React.
+
 ## 1.5.0-rc.1 — 2026-10-26
 
 ### Added
