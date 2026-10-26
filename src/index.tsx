@@ -35,7 +35,7 @@ import {
   useSettingsLoaded,
 } from "./settings";
 
-export const ROUTE = "/spindeck";
+const ROUTE = "/spindeck";
 
 const WheelIcon = () => (
   <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

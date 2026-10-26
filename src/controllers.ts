@@ -54,7 +54,7 @@ function onList(list: any) {
 }
 
 /** Note where an input came from (controller index). */
-export function noteInput(idx: unknown) {
+function noteInput(idx: unknown) {
   if (typeof idx === "number" && idx >= 0) lastIdx = idx;
 }
 

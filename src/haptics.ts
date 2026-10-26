@@ -15,8 +15,8 @@ import { debug } from "./log";
 // Location values differ by mode (both tested one by one on device):
 //   normal mode:        1 = right, 2 = left
 //   keyboard action set: 0 = left, 1 = right, 2 = both
-export const HAPTIC_LOCATION = { left: 2, right: 1 } as const;
-export const HAPTIC_LOCATION_KEYBOARD = { left: 0, right: 1 } as const;
+const HAPTIC_LOCATION = { left: 2, right: 1 } as const;
+const HAPTIC_LOCATION_KEYBOARD = { left: 0, right: 1 } as const;
 
 let service: any | null | undefined;
 let broken = false;

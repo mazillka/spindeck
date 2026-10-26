@@ -187,5 +187,5 @@ const en: typeof ko = {
 };
 
 export type Strings = typeof ko;
-export const STRINGS: Record<Lang, Strings> = { ko, en };
+const STRINGS: Record<Lang, Strings> = { ko, en };
 export const useT = (): Strings => STRINGS[useLang()];

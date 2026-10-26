@@ -1256,7 +1256,7 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
 
 /** Index letter of a title: A–Z, a Hangul initial consonant (ㄱ…ㅎ), "#" for digits/symbols. */
 const CHOSEONG = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
-export function indexLetter(name: string): string {
+function indexLetter(name: string): string {
   const ch = (name.trim()[0] ?? "#").toUpperCase();
   const code = ch.charCodeAt(0);
   if (code >= 0xac00 && code <= 0xd7a3) return CHOSEONG[Math.floor((code - 0xac00) / 588)];

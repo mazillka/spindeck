@@ -56,7 +56,7 @@ function makeStepper(opts: PadWheelOptions) {
   };
 }
 
-export const ANALOG_TYPE = { left: 48, right: 49 } as const;
+const ANALOG_TYPE = { left: 48, right: 49 } as const;
 const ANALOG_DEADZONE = 0.12; // normalized radius; the centre is noisy
 const ANALOG_GESTURE_GAP_MS = 150; // messages stop while not touching
 const MAX_TURN_PER_MESSAGE = Math.PI / 2; // larger = a jump (e.g. pad reset on B), not rubbing

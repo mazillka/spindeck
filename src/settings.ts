@@ -43,7 +43,7 @@ export interface WheelSettings {
   barLook?: { color: string; image: string; backdrop: string }; // Steam's opaque top bar, learned
 }
 
-export const DEFAULTS: WheelSettings = {
+const DEFAULTS: WheelSettings = {
   homeEnabled: true,
   ownerText: "나의 스팀덱",
   subtitleText: "",

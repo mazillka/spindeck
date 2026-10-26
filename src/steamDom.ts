@@ -36,7 +36,7 @@ export function focusablesIn(box: Element): HTMLElement[] {
 
 const none = (v: string) => !v || v === "none" || v === "rgba(0, 0, 0, 0)" || v === "transparent";
 /** Has its own background (incl. ::before/::after) or a backdrop filter. */
-export function isPainted(view: any, el: Element) {
+function isPainted(view: any, el: Element) {
   return [view.getComputedStyle(el), view.getComputedStyle(el, "::before"), view.getComputedStyle(el, "::after")].some(
     (cs: CSSStyleDeclaration) => !none(cs.backgroundColor) || !none(cs.backgroundImage) || !none(cs.backdropFilter),
   );
