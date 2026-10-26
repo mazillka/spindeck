@@ -132,7 +132,12 @@ function sectionsOffset(p: Parts) {
 /** Scroll home so the sections are in view, and optionally focus their first item. */
 function revealSections(host: HTMLElement | null, focus = true) {
   const p = homeParts(host);
-  if (!p) return;
+  if (!p) {
+    // Unrecognised home layout (Steam update?): nothing to scroll, but focus must
+    // still leave the (now hidden) wheel, or ▲ / Ⓑ would act on the wheel instead.
+    if (focus) focusFirstIn(host);
+    return;
+  }
   p.vs.scrollTop = sectionsOffset(p);
   if (!focus) return;
   // Focus the CURRENT tab (What's New / Friends / Recommended), like the stock
@@ -615,7 +620,14 @@ function WheelHome({ original }: { original: ReactNode }) {
     let restore: (() => void) | null = null;
     const view: any = host.ownerDocument?.defaultView ?? window;
     const mode = () => (tm.current.restingOnWheel ? "top" : screenRef.current === "sections" ? "sections" : "free");
-    const tryHide = () => !!(restore ??= hideFirstShelf(host, mode));
+    let hiddenIn: HTMLElement | undefined; // the scroller whose row we hid
+    const tryHide = () => {
+      if (!restore) {
+        restore = hideFirstShelf(host, mode);
+        hiddenIn = restore ? homeParts(host)?.vs : undefined;
+      }
+      return !!restore;
+    };
     const mo = view.MutationObserver ? new view.MutationObserver(() => tryHide() && mo.disconnect()) : null;
     if (!tryHide()) mo?.observe(host, { childList: true, subtree: true });
     const giveUp = setTimeout(() => {
@@ -624,11 +636,20 @@ function WheelHome({ original }: { original: ReactNode }) {
       // Steam's home as is; nothing else depends on this.
       if (!restore) debug("home", "recent-games row not found; leaving the home as is");
     }, 8000);
+    // Steam re-rendered its whole home (a new scroller): hide the new recent row
+    // too, and put the sections back in place if they're showing.
+    const recheck = setInterval(() => {
+      if (!restore || hiddenIn?.isConnected) return;
+      restore();
+      restore = null;
+      if (tryHide() && screenRef.current === "sections") revealSections(host, false);
+    }, HEADER_REAPPLY_MS);
     const unregister = onTeardown(() => restore?.());
     return () => {
       unregister();
       mo?.disconnect();
       clearTimeout(giveUp);
+      clearInterval(recheck);
       restore?.();
       restore = null;
     };
