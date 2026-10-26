@@ -110,8 +110,17 @@ export function subscribeKeyboardAnalogWheel(opts: PadWheelOptions): () => void 
     });
     Input.EnableControllerAnalogInputMessages?.(true);
     Input.SetKeyboardActionset(true, false);
-  } catch {
-    /* unavailable on this client */
+  } catch (e) {
+    // Unavailable on this client. Never leave the keyboard action set on without
+    // our listener: Steam would then read pad rubbing as Ⓑ / Steam-menu presses.
+    debug("analog", "circle input unavailable", e);
+    try {
+      reg?.unregister?.();
+      Input.SetKeyboardActionset(false, false);
+    } catch {
+      /* ignore */
+    }
+    return () => {};
   }
   // Steam drops the action set unless it's refreshed, as its radial menu does.
   const keep = setInterval(() => {
