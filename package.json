@@ -1,6 +1,6 @@
 {
   "name": "spindeck",
-  "version": "1.4.1",
+  "version": "1.5.0-rc.1",
   "description": "Rotary-wheel game launcher for Steam Deck with personalized title",
   "type": "module",
   "scripts": {
