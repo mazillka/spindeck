@@ -416,20 +416,16 @@ function QuickAccessPanel() {
         </PanelSectionRow>
       </PanelSection>
       <PanelSection title={t.about}>
-        {KOFI_URL && (
-          <PanelSectionRow>
-            <ButtonItem layout="below" description={t.supportDesc} onClick={() => openExternal(KOFI_URL)}>
-              ☕ {t.support}
-            </ButtonItem>
-          </PanelSectionRow>
-        )}
-        {REPO_URL && (
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={() => openExternal(REPO_URL)}>
-              {t.sourceAndUpdates}
-            </ButtonItem>
-          </PanelSectionRow>
-        )}
+        <PanelSectionRow>
+          <ButtonItem layout="below" description={t.supportDesc} onClick={() => openExternal(KOFI_URL)}>
+            ☕ {t.support}
+          </ButtonItem>
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <ButtonItem layout="below" onClick={() => openExternal(REPO_URL)}>
+            {t.sourceAndUpdates}
+          </ButtonItem>
+        </PanelSectionRow>
         <PanelSectionRow>
           <ButtonItem layout="below" description={t.reloadDesc} onClick={() => requestWheelReset()}>
             ↻ {t.reload}

@@ -67,5 +67,3 @@ export function useLang(): Lang {
   }, []);
   return resolve(s.language);
 }
-
-export const useKoreanLocale = () => useLang() === "ko";

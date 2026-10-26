@@ -29,7 +29,7 @@ python3 tests/py/t.py  # backend tests
 
 ## Rules
 
-- Steam's UI internals are not a public API. Wrap every access in try/catch or `attempt()` (`src/safety.ts`) and fall back to Steam's own behaviour; never let the home screen crash.
+- Steam's UI internals are not a public API. Wrap every access in try/catch and fall back to Steam's own behaviour; never let the home screen crash.
 - Anything that changes Steam's DOM, input or styles must be undone on unload: register it with `onTeardown()`.
 - New setting: add it to `WheelSettings` + `DEFAULTS` in `settings.ts`, a panel control in `index.tsx`, and both languages in `i18n.ts`. If an existing default changes, add a `settingsVersion` migration.
 - Button handlers on the wheel go through the `latest`/`call` trampolines in `WheelPage.tsx` (Steam's `Focusable` keeps stale handlers otherwise). On the Deck: Ⓨ = `Options`, Ⓧ = `Secondary`, ≡ = `Menu`.
