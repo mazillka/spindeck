@@ -26,15 +26,25 @@ let state: UpdateState = { kind: "idle" };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
-/** true if version a is newer than b ("1.10.0" > "1.9.2"). */
+/**
+ * true if version a is newer than b: "1.10.0" > "1.9.2", and a release is newer
+ * than its own pre-releases ("1.5.0" > "1.5.0-rc.2" > "1.5.0-rc.1"), so someone
+ * on a pre-release is offered the stable version once it's out.
+ */
 export function newer(a: string, b: string) {
-  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
-  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+  const parse = (v: string) => {
+    const [core, pre = ""] = v.split("-", 2);
+    return { core: core.split(".").map((n) => parseInt(n, 10) || 0), pre };
+  };
+  const pa = parse(a);
+  const pb = parse(b);
+  for (let i = 0; i < Math.max(pa.core.length, pb.core.length); i++) {
+    const d = (pa.core[i] ?? 0) - (pb.core[i] ?? 0);
     if (d) return d > 0;
   }
-  return false;
+  if (!pa.pre || !pb.pre) return !pa.pre && !!pb.pre;
+  // Both pre-releases of the same version: "rc.10" > "rc.9".
+  return pa.pre.localeCompare(pb.pre, "en", { numeric: true }) > 0;
 }
 
 /** The newer release, "latest" if we're up to date, or null if the check failed. */

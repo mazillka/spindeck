@@ -20,6 +20,16 @@ test("newer compares numerically, part by part", () => {
   assert.equal(newer("2.0.0", "10.0.0"), false);
 });
 
+test("newer: a release beats its own pre-releases, pre-releases count up", () => {
+  assert.equal(newer("1.5.0", "1.5.0-rc.1"), true, "rc users are offered the stable release");
+  assert.equal(newer("1.5.0-rc.1", "1.5.0"), false);
+  assert.equal(newer("1.5.0-rc.1", "1.4.1"), true);
+  assert.equal(newer("1.5.0-rc.2", "1.5.0-rc.1"), true);
+  assert.equal(newer("1.5.0-rc.10", "1.5.0-rc.9"), true);
+  assert.equal(newer("1.5.0-rc.1", "1.5.0-rc.1"), false);
+  assert.equal(newer("1.5.1-rc.1", "1.5.0"), true);
+});
+
 test("check: a newer release is offered with its GitHub digest", async () => {
   release();
   await checkNow();
