@@ -3,7 +3,8 @@
 // when the plugin is uninstalled.
 import { callable } from "@decky/api";
 import { useEffect, useState } from "react";
-import { getLang } from "./locale";
+import { getLang, type LangSetting } from "./locale";
+import { STRINGS } from "./i18n";
 
 export type SortMode = "recent" | "alpha" | "playtime";
 export type PadSide = "left" | "right";
@@ -39,7 +40,7 @@ export interface WheelSettings {
   hapticDegrees: number;  // trackpad degrees per haptic click (finer than steps feels like a scroll wheel)
   rotatePad: PadSide;     // which trackpad spins the wheel
   aLaunches: boolean;     // Ⓐ launches the game and Ⓧ opens its page (off: Ⓐ opens the page)
-  language: "auto" | "ko" | "en"; // UI language; auto = follow Steam
+  language: LangSetting; // UI language; auto = follow Steam
   barLook?: { color: string; image: string; backdrop: string }; // Steam's opaque top bar, learned
 }
 
@@ -89,7 +90,7 @@ export async function initSettings() {
   try {
     const saved = await backendGet();
     // Default bottom text in the UI language, until the user sets their own.
-    const merged: any = { ...DEFAULTS, ownerText: getLang() === "ko" ? "나의 스팀덱" : "My Steam Deck", ...(saved ?? {}) };
+    const merged: any = { ...DEFAULTS, ownerText: STRINGS[getLang()].defaultOwner, ...(saved ?? {}) };
     // Older saves stored a boolean instead of a scope.
     if (saved && "installedOnly" in saved && !("libraryScope" in saved)) {
       merged.libraryScope = (saved as any).installedOnly ? "installed" : "all";

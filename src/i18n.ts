@@ -1,10 +1,15 @@
-import { Lang, useLang } from "./locale";
+import { type Lang, useLang } from "./locale";
+import { hours as fmtHours } from "./lang/format";
+import { de } from "./lang/de";
+import { es } from "./lang/es";
+import { fr } from "./lang/fr";
+import { ja } from "./lang/ja";
+import { pt } from "./lang/pt";
+import { ru } from "./lang/ru";
+import { uk } from "./lang/uk";
+import { zh } from "./lang/zh";
 
-/** 95 min → "1.6", 754 min → "12.6", 6000 min → "100". */
-const fmtHours = (min: number) => {
-  const h = min / 60;
-  return h >= 100 ? String(Math.round(h)) : (Math.round(h * 10) / 10).toString();
-};
+// Korean is the source: every other language must have exactly its keys (tsc checks).
 
 const ko = {
   homeToggle: "휠 런처를 홈 화면으로",
@@ -65,6 +70,7 @@ const ko = {
   letterCount: "게임 {n}개",
   milestone: (n: string) => `🎉 다이얼 ${n}바퀴 돌파!`,
   odometer: (n: string) => `🌀 지금까지 돌린 바퀴: ${n}`,
+  language: "언어",
   gamePage: "게임 페이지",
   play: "플레이",
   options: "옵션",
@@ -155,6 +161,7 @@ const en: typeof ko = {
   letterCount: "{n} games",
   milestone: (n: string) => `🎉 ${n} turns on the dial!`,
   odometer: (n: string) => `🌀 Dial odometer: ${n} turns`,
+  language: "Language",
   gamePage: "Game page",
   play: "Play",
   options: "Options",
@@ -187,5 +194,5 @@ const en: typeof ko = {
 };
 
 export type Strings = typeof ko;
-const STRINGS: Record<Lang, Strings> = { ko, en };
+export const STRINGS: Record<Lang, Strings> = { ko, en, de, fr, es, pt, ru, uk, ja, zh };
 export const useT = (): Strings => STRINGS[useLang()];

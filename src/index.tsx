@@ -16,7 +16,7 @@ import { listCollections } from "./games";
 import { requestWheelReset } from "./reset";
 import { composeHangul } from "./hangul";
 import { openHangulPad } from "./HangulPad";
-import { useLang, detected, LangSetting } from "./locale";
+import { useLang, detected, LangSetting, LANGS } from "./locale";
 import { useT, Strings } from "./i18n";
 import { HOME_ROUTE, installHomePatch, removeHomePatch } from "./homePatch";
 import { KOFI_URL, PLUGIN_VERSION, REPO_URL } from "./links";
@@ -196,13 +196,9 @@ function QuickAccessPanel() {
       <PanelSection title={t.personalize}>
         <PanelSectionRow>
           <DropdownItem
-            label="언어 / Language"
+            label={t.language === "Language" ? "Language" : `${t.language} / Language`}
             description={`${t.langAuto}: ${detected.raw} (${detected.source})`}
-            rgOptions={[
-              { data: "auto", label: t.langAuto },
-              { data: "ko", label: "한국어" },
-              { data: "en", label: "English" },
-            ]}
+            rgOptions={[{ data: "auto", label: t.langAuto }, ...LANGS.map((l) => ({ data: l.lang, label: l.name }))]}
             selectedOption={s.language ?? "auto"}
             onChange={(o) => updateSettings({ language: o.data as LangSetting })}
           />

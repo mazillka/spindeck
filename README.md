@@ -19,7 +19,7 @@
 - **Dial odometer.** Counts every turn you've ever spun. See the total in the panel's About section, with milestone celebrations along the way.
 - **Your own title.** Set a line of text in the corner (e.g. "j1's Steam Deck") and an optional subtitle, with a preset accent colour.
 - **Steam's home is still there.** Press ▼ for What's New / Friends / Recommended, which behave like the stock page.
-- **English and Korean**, following Steam's language. There is a built-in Hangul keypad, because Steam's keyboard can't type Korean in the Quick Access panel.
+- **10 languages**, following Steam's language: English, 한국어, Deutsch, Français, Español, Português (Brasil), Русский, Українська, 日本語 and 简体中文 (or pick one in the panel). There is a built-in Hangul keypad, because Steam's keyboard can't type Korean in the Quick Access panel.
 
 ## Controls (home)
 
