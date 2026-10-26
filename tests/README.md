@@ -1,5 +1,15 @@
 # Dev tests (not shipped)
 
+| Suite | Where | Run |
+| --- | --- | --- |
+| Unit: settings migrations, updater (digest / URL checks), library loading, Hangul, odometer, haptics | `tests/unit/` | `npm run test:unit` (Node 24+, nothing to install) |
+| Backend: settings file, update marker, uninstall | `tests/py/t.py` | `npm run test:backend` |
+| Smoke + E2E: the real plugin and `main.py` in a browser mock | `devtools/mock/e2e/` | `npm run test:e2e`, see [devtools/mock/README.md](../devtools/mock/README.md) |
+
+CI runs all three. The scripts below are older regression checks that need a local React / Playwright install (paths at the top of each file).
+
+## Regression scripts
+
 Live tests that run the built plugin (`dist/index.js`) with real React in headless Chromium,
 using stubbed Decky/Steam globals (`entry.js`).
 

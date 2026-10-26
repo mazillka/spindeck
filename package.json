@@ -6,7 +6,11 @@
   "scripts": {
     "build": "bun build/build.ts",
     "package": "./scripts/package.sh",
-    "typecheck": "tsc -p typecheck/tsconfig.json"
+    "typecheck": "tsc -p typecheck/tsconfig.json",
+    "test:unit": "node --test --import ./tests/unit/register.mjs \"tests/unit/*.test.mjs\"",
+    "test:backend": "python3 tests/py/t.py",
+    "test:e2e": "npm --prefix devtools/mock run test:e2e",
+    "mock": "npm --prefix devtools/mock run build && python3 devtools/mock/dev-server.py"
   },
   "license": "BSD-3-Clause",
   "devDependencies": {
