@@ -27,7 +27,7 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 /** true if version a is newer than b ("1.10.0" > "1.9.2"). */
-function newer(a: string, b: string) {
+export function newer(a: string, b: string) {
   const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
   const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {

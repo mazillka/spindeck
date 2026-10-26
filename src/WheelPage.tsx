@@ -13,6 +13,7 @@ import { openNativeGameMenu } from "./nativeMenu";
 import { rumbleBoth, wheelTick } from "./haptics";
 import { findHeaderSearch } from "./steamDom";
 import { InfoRow } from "./InfoRow";
+import { indexLetter } from "./hangul";
 import { friendsInGame } from "./friends";
 import {
   DETAILS_DELAY_MS,
@@ -1259,17 +1260,6 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
       </div>
     </Focusable>
   );
-}
-
-/** Index letter of a title: A–Z, a Hangul initial consonant (ㄱ…ㅎ), "#" for digits/symbols. */
-const CHOSEONG = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
-function indexLetter(name: string): string {
-  const ch = (name.trim()[0] ?? "#").toUpperCase();
-  const code = ch.charCodeAt(0);
-  if (code >= 0xac00 && code <= 0xd7a3) return CHOSEONG[Math.floor((code - 0xac00) / 588)];
-  if (/[A-Z]/.test(ch) || /[\u3131-\u314e]/.test(ch)) return ch;
-  if (/\p{L}/u.test(ch)) return ch;
-  return "#";
 }
 
 /**
