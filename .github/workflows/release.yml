@@ -68,7 +68,12 @@ jobs:
           name: release
 
       # GitHub's own CLI (preinstalled on the runner): no third-party code runs with the write token.
+      # A tag like v1.5.0-rc.1 is a pre-release: GitHub never reports it as "latest",
+      # so the in-panel updater (releases/latest) keeps offering stable versions only.
       - name: Create GitHub Release
-        run: gh release create "$GITHUB_REF_NAME" spindeck-*.zip --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md
+        run: |
+          prerelease=()
+          [[ "$GITHUB_REF_NAME" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" spindeck-*.zip --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md "${prerelease[@]}"
         env:
           GH_TOKEN: ${{ github.token }}
