@@ -7,3 +7,4 @@ devtools/mock/out/
 devtools/mock/.dev-data/
 devtools/mock/test-results/
 devtools/mock/playwright-report/
+dist/
