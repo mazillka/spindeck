@@ -9,6 +9,8 @@ import { PLUGIN_VERSION } from "./links";
 import { debug } from "./log";
 
 const RELEASES_API = "https://api.github.com/repos/justinca92/spindeck/releases/latest";
+/** The only place an update zip may come from. */
+const DOWNLOAD_PREFIX = "https://github.com/justinca92/spindeck/releases/download/";
 /** Decky's InstallType.UPDATE (0 install, 1 reinstall, 2 update). */
 const INSTALL_TYPE_UPDATE = 2;
 
@@ -63,6 +65,12 @@ const prepareUpdate = callable<[], boolean>("prepare_update");
 
 /** Ask Decky to install the release over us. false → this Decky can't do it from here. */
 export async function startUpdate(info: UpdateInfo): Promise<boolean> {
+  // Decky skips its sha256 check when the hash is empty: without GitHub's digest
+  // (or from anywhere but this repo's releases) the zip must be installed by hand.
+  if (!info.hash || !info.url.startsWith(DOWNLOAD_PREFIX)) {
+    debug("update", "no digest or unexpected download URL: manual install only", info);
+    return false;
+  }
   const backend = (window as any).DeckyBackend;
   if (typeof backend?.call !== "function") {
     debug("update", "Decky's installer isn't reachable from here");
