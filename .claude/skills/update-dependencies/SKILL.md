@@ -5,14 +5,15 @@ description: Bring every Spindeck dependency up to date in one change - the npm 
 
 # Keeping Spindeck's dependencies current
 
-Two places pin versions. Update them together so a release never ships half-updated:
+Three places pin versions. Update them together so a release never ships half-updated:
 
 | Where | Check | Update |
 | --- | --- | --- |
 | `package.json` (`devDependencies`; no lockfile, CI fetches `typescript` at this range with `npx -p`) | `npm outdated` or `npm view <pkg> version` | edit the range, keep the `^x.y.z` style |
+| `devtools/mock/package.json` + `package-lock.json` (the mock and Playwright) | `npm outdated --prefix devtools/mock` | `npm install <pkg>@latest --prefix devtools/mock`; `react` and `react-dom` on the exact same version |
 | `.github/workflows/*.yml` (commit SHA plus a `# vX.Y.Z` comment) | `gh api repos/<owner>/<action>/releases/latest --jq .tag_name` per action | replace both the SHA and the comment |
 
-Dependabot (`.github/dependabot.yml`) opens weekly PRs for both. When one is open, fold its bump into this run and close it rather than merging it separately.
+Dependabot (`.github/dependabot.yml`) opens weekly PRs for all three. When one is open, fold its bump into this run and close it rather than merging it separately.
 
 ## Steps
 
@@ -24,8 +25,8 @@ Dependabot (`.github/dependabot.yml`) opens weekly PRs for both. When one is ope
    - A **major** bump: read the release notes for every major in between before running anything (`gh api repos/<o>/<r>/releases/tags/vN.0.0 --jq .body`), grep the repo for any removed or renamed API / input, and say what changed and why the code still fits.
    - If one update breaks something you can't fix cleanly, leave that one on its last working version, finish the rest, and report it as held back with the reason.
 4. Verify - the commands in [AGENTS.md](../../../AGENTS.md#commands) must pass:
-   - `npm run typecheck`
+   - `npm run typecheck`, `npm run test:unit`, `npm run test:backend`
    - `bun build/build.ts`
-   - `python3 tests/py/t.py`
-5. Version: `typescript` only typechecks, so a dev-tool or Actions-only update doesn't change `dist/` and needs no version bump or release.
+   - `npm run test:e2e` (after a Playwright update: `npx playwright install chromium` in `devtools/mock` first)
+5. Version: `typescript` and the mock's packages never reach the zip, so a dev-tool or Actions-only update doesn't change `dist/` and needs no version bump or release.
 6. Report each package / action with its old and new version, majors marked, plus anything held back. Commit only when asked, e.g. `Build: TypeScript 5.6 → 7.0` and `Release workflow: checkout v4 → v7 (Node 24)`.
