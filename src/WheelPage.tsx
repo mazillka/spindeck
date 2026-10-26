@@ -560,9 +560,12 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
   useEffect(() => {
     lastViewKey = view.key;
   }, [view.key]);
+  // Bumped when Steam's window gets focus back (a game closed, an install or the
+  // Quick Access panel finished), so installs / uninstalls / new plays show up.
+  const [libraryRev, setLibraryRev] = useState(0);
   const games = useMemo<GameEntry[]>(
     () => (view.collection ? loadCollectionGames(view.collection, view.sort) : loadGames(view.installedOnly, view.sort)),
-    [view.key, view.sort],
+    [view.key, view.sort, libraryRev],
   );
   const n = games.length;
   const restoreSel = (list: GameEntry[]) => {
@@ -809,7 +812,11 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
     let tm: any;
     const on = () => {
       clearTimeout(tm);
-      tm = setTimeout(() => setWinFocused(true), WINDOW_REFOCUS_DELAY_MS);
+      tm = setTimeout(() => {
+        setWinFocused(true);
+        // Not mid-roulette: a new list would jump the selection under the spin.
+        if (!spinningRef.current) setLibraryRev((r) => r + 1);
+      }, WINDOW_REFOCUS_DELAY_MS);
     };
     const off = () => {
       clearTimeout(tm);
