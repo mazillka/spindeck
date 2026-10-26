@@ -31,3 +31,9 @@ export async function wheelReady(page: Page) {
   await expect(title(page)).toBeVisible();
   await page.waitForTimeout(400);
 }
+
+/** On the home wheel ▲ / ▼ are ignored this long after arriving (held D-pad guard, ARRIVAL_IGNORE_MS). */
+export async function homeReady(page: Page) {
+  await expect(title(page)).toBeVisible();
+  await page.waitForTimeout(900);
+}

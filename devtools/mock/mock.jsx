@@ -8,6 +8,11 @@
 // Keys → Deck buttons: arrows = D-pad, Enter/A = Ⓐ, Esc/Backspace/B = Ⓑ,
 // X = Ⓧ, Y = Ⓨ, M = ≡, Q/E = L1/R1, ` = Quick Access, L = event log.
 // Everything the plugin asks of Steam lands in the event log (window.mock.log).
+//
+// URL options: ?qam ?log ?lang=<steam language>, and for regression tests
+// ?sgdb=first|last (SteamGridDB's home patch loads before / after Spindeck),
+// ?rival (another plugin that also keeps its patch last), ?crash (the wheel
+// throws while rendering), ?flat (a Steam home layout Spindeck doesn't know).
 import * as React from "react";
 import { cloneElement, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -43,6 +48,7 @@ const HANDLER = { [B.OK]: "onOKButton", [B.CANCEL]: "onCancelButton", [B.SECONDA
 
 const focusProps = new WeakMap();
 function Focusable(props) {
+  if (params.has("crash") && props.onOptionsButton) throw new Error("simulated Steam change");
   const { children, style, className, autoFocus, onActivate, onClick, onGamepadFocus, onGamepadBlur } = props;
   const ref = React.useRef(null);
   useEffect(() => void focusProps.set(ref.current, props));
@@ -75,9 +81,9 @@ function moveFocus(button) {
   const c0 = [r0.left + r0.width / 2, r0.top + r0.height / 2];
   let best = null;
   for (const el of scope.querySelectorAll("[data-focusable], button, input, a[href]")) {
-    if (el === from || el.contains(from)) continue;
+    if (el === from || el.contains(from) || el.closest("[data-mock-nav-skip]")) continue;
     const r = el.getBoundingClientRect();
-    if (!r.width || !r.height) continue;
+    if (!r.width || !r.height || r.bottom <= 0 || r.top >= innerHeight) continue; // Steam only moves between what's on screen
     const vx = r.left + r.width / 2 - c0[0];
     const vy = r.top + r.height / 2 - c0[1];
     const along = vx * dx + vy * dy;
@@ -362,24 +368,36 @@ const useLayers = () => {
   }, []);
   return layers;
 };
+// Like Decky's router state provider, which is subscribed long before any plugin
+// loads: never miss an update (a plugin moving its patch right after loading).
 const useRouter = () => {
   const [, bump] = useState(0);
-  useEffect(() => {
+  const seen = routerState.version;
+  React.useLayoutEffect(() => {
     const l = () => bump((n) => n + 1);
     routerState.bus.addEventListener("update", l);
+    if (routerState.version !== seen) l();
     return () => routerState.bus.removeEventListener("update", l);
   }, []);
 };
 
 /** Steam's own home, as laid out on device: scroller › [spacer, recent games panel, sections › tab row …]. */
+const Recents = React.memo(function Recents() {
+  return apps.slice(0, 6).map((a) => <button key={a.appid}>{a.display_name}</button>);
+});
+let homeRev = 0; // bumped by mock.rerenderHome(): Steam replacing its home's elements
 const SteamHome = React.memo(function SteamHome() {
+  if (params.has("flat"))
+    return (
+      <div className="steam-home-flat">
+        unrecognised home layout <button>only</button>
+      </div>
+    );
   return (
     <div className="steam-home">
       <div style={{ position: "absolute", height: 0 }} />
       <div className="recent-row">
-        {apps.slice(0, 6).map((a) => (
-          <button key={a.appid}>{a.display_name}</button>
-        ))}
+        <Recents autoFocus showBackground />
       </div>
       <div>
         <div>
@@ -401,11 +419,78 @@ const SteamHome = React.memo(function SteamHome() {
 });
 
 /** Decky's route patching: every patch gets the previous one's output, in registration order. */
+const IS_PATCHED = Symbol("isPatched");
 function PatchedRoute({ path, children }) {
   useRouter();
-  let props = { children };
-  for (const patch of routerState._routePatches.get(path) ?? []) props = patch({ ...props }) ?? props;
-  return props.children;
+  let child = children;
+  for (const patch of routerState._routePatches.get(path) ?? []) {
+    const oType = child.type;
+    const next = patch({ path, children: { ...React.cloneElement(child), type: child[IS_PATCHED] ? oType : (props) => React.createElement(oType, props) } }).children;
+    next[IS_PATCHED] = true;
+    child = next;
+  }
+  return child;
+}
+
+// ───────────── Other plugins patching the home (regression tests) ─────────────
+// SteamGridDB 1.7.x's home patch, its first levels as in src/patches/homePatch.tsx:
+// Decky's afterPatch on the element's type, wrapReactType (`{ ...type }`) on its
+// output, then the recents row — unguarded, so it throws if the row isn't there (#2).
+const WRAPPED = Symbol("wrapped");
+const wrapReactType = (node) => (node.type?.[WRAPPED] ? node.type : (node.type = { ...node.type, [WRAPPED]: true }));
+const afterPatch = (obj, prop, handler) => {
+  const orig = obj[prop];
+  obj[prop] = Object.assign(function (...a) {
+    const ret = orig.apply(this, a);
+    return handler(a, ret) ?? ret;
+  }, orig);
+};
+const findInTree = (node, filter) => {
+  if (!node || typeof node !== "object") return undefined;
+  if (filter(node)) return node;
+  if (Array.isArray(node)) {
+    for (const x of node) {
+      const r = findInTree(x, filter);
+      if (r) return r;
+    }
+    return null;
+  }
+  for (const k of ["props", "children", "child", "sibling"]) {
+    const r = findInTree(node[k], filter);
+    if (r) return r;
+  }
+  return undefined;
+};
+function steamGridDbPatch(props) {
+  afterPatch(props.children, "type", (_, ret) => {
+    let cache = null;
+    wrapReactType(ret);
+    afterPatch(ret.type, "type", (_, ret2) => {
+      if (cache) return cache;
+      const recents = findInTree(ret2, (x) => x?.props && "autoFocus" in x.props && "showBackground" in x.props);
+      wrapReactType(recents);
+      afterPatch(recents.type, "type", (_, ret3) => {
+        cache = ret2;
+        window.mock.sgdbHits++;
+        return ret3;
+      });
+      return ret2;
+    });
+    return ret;
+  });
+  return props;
+}
+// A rival that also always moves its patch last: Spindeck must give up, not swap forever.
+function rivalPatch(props) {
+  let last;
+  routerState._routePatches.get("/library/home")?.forEach((x) => (last = x));
+  if (last !== rivalPatch)
+    setTimeout(() => {
+      window.mock.rivalMoves++;
+      routerHook.removePatch("/library/home", rivalPatch);
+      routerHook.addPatch("/library/home", rivalPatch);
+    }, 0);
+  return props;
 }
 
 function GamePage({ appid }) {
@@ -423,7 +508,7 @@ function GamePage({ appid }) {
 
 function Route({ path }) {
   useRouter();
-  if (path === "/library/home") return <PatchedRoute path={path}>{<SteamHome />}</PatchedRoute>;
+  if (path === "/library/home") return <PatchedRoute path={path}>{<SteamHome key={homeRev} />}</PatchedRoute>;
   const m = /^\/library\/app\/(\d+)/.exec(path);
   if (m) return <GamePage appid={Number(m[1])} />;
   const C = routerState.routes.get(path);
@@ -459,7 +544,7 @@ function Shell({ plugin }) {
   return (
     <>
       <Route key={l.route} path={l.route} />
-      <header className="steam-header">
+      <header className="steam-header" data-mock-nav-skip="">
         <input className="steam-search" placeholder="Search" aria-label="Search" />
         <nav className="dev-nav">
           <button onClick={() => (layers.history.length = 0, setLayer("route", "/library/home"))}>Home</button>
@@ -516,8 +601,21 @@ window.mock = {
   back,
   qam: (open = true) => setLayer("qam", open),
   apps,
+  /** Whether the controller's keyboard action set (the trackpad circle input) is on right now. */
+  keyboardActionset: () => lastKb === true,
+  sgdbHits: 0,
+  rivalMoves: 0,
+  /** Steam re-rendering its home: every element of it is replaced. */
+  rerenderHome: () => (homeRev++, notify()),
+  /** Decky unloading the plugin: onDismount only, React is NOT unmounted (Decky doesn't guarantee it). */
+  unload: () => plugin.onDismount(),
 };
 
+// Plugins load in either order; Decky re-renders the router when patches change.
+const sgdb = params.get("sgdb");
+if (sgdb === "first") routerHook.addPatch("/library/home", steamGridDbPatch);
 const plugin = (await import("./plugin.js")).default();
+if (sgdb === "last") routerHook.addPatch("/library/home", steamGridDbPatch);
+if (params.has("rival")) routerHook.addPatch("/library/home", rivalPatch);
 createRoot(document.getElementById("root")).render(<Shell plugin={plugin} />);
 window.mock.ready = true;

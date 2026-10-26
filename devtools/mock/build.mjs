@@ -32,7 +32,8 @@ const mock = {
   target: "es2022",
   external: ["./plugin.js"], // loaded at runtime, after the fake Steam globals exist
   jsx: "automatic",
-  define: { "process.env.NODE_ENV": '"development"' },
+  // Production React, like Steam's: Decky's route patching writes to elements, which development React freezes.
+  define: { "process.env.NODE_ENV": '"production"' },
   logLevel: "info",
 };
 

@@ -27,9 +27,17 @@ From the repo root, `npm run mock` builds and serves in one go.
 | `` ` `` | Quick Access (…) |
 | L | event log |
 
-The header's buttons switch between the home, the `/spindeck` page and Quick Access, show the event log, and reset the saved settings. URL options: `?qam` opens Quick Access, `?log` shows the log, `?lang=koreana` makes Steam report Korean.
+The header's buttons switch between the home, the `/spindeck` page and Quick Access, show the event log, and reset the saved settings. URL options:
+- `?qam` opens Quick Access, `?log` shows the log, `?lang=koreana` makes Steam report Korean.
+- For regression tests:
+  - `?sgdb=first|last`: SteamGridDB's home patch loads before or after Spindeck.
+  - `?rival`: another plugin also keeps its patch last.
+  - `?crash`: the wheel throws while rendering.
+  - `?flat`: Steam's home has a layout Spindeck doesn't know.
 
-The **event log** lists everything the plugin asks of Steam and Decky: `navigate`, `RunGame`, `haptic`, `sound`, `keyboardActionset`, `decky` (installer calls) and `backend` calls. In the browser console, `mock.events("RunGame")` returns those entries and `await mock.circle(360)` rubs the trackpad once around.
+Decky's route patching is reproduced as Decky does it: each patch gets a fresh clone of the route's element, wrapped the first time. React is the production build, like Steam's.
+
+The **event log** lists everything the plugin asks of Steam and Decky: `navigate`, `RunGame`, `haptic`, `sound`, `keyboardActionset`, `decky` (installer calls) and `backend` calls. In the browser console, `mock.events("RunGame")` returns those entries and `await mock.circle(360)` rubs the trackpad once around. `mock.rerenderHome()` replaces every element of Steam's home, and `mock.unload()` unloads the plugin the way Decky does.
 
 ## Tests
 
@@ -41,6 +49,8 @@ npm run test:e2e
 Playwright builds the mock and starts the server on port 5191 with its own settings folder (`.dev-data/e2e`). Each test resets the settings through the real backend first.
 
 - [e2e/smoke.spec.ts](e2e/smoke.spec.ts): every entry point loads without errors (home, Quick Access, `/spindeck`, wheel off, Korean), and the backend round-trip works.
+- [e2e/regressions.spec.ts](e2e/regressions.spec.ts): bugs that once broke on a Deck. SteamGridDB's patch in either order (#2), a rival plugin that also keeps its patch last, unloading without React unmounting, a crash falling back to Steam's home, and an unknown home layout.
+- [e2e/home.spec.ts](e2e/home.spec.ts): the wheel ⇄ sections switch (▼ / ▲, Ⓑ, held ▲, ▲ to search) and the top band. It covers the band after Steam rewrites the tab row or re-renders its whole home, and checks that smooth scrolling isn't fought.
 - [e2e/wheel.spec.ts](e2e/wheel.spec.ts): controller flows. Covers the D-pad, Ⓐ / Ⓧ with and without "Ⓐ launches the game", games that aren't installed, the Ⓨ roulette, the trackpad circle with haptics, L1 / R1, settings surviving a reload, and the in-panel update (it installs with GitHub's sha256 and refuses without one).
 
 ## Limitations

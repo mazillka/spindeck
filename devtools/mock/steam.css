@@ -14,6 +14,8 @@ button, input { font: inherit; }
 .steam-home { height: 100%; overflow-y: auto; background: #1a2029; }
 .recent-row { height: 561px; display: flex; gap: 12px; align-items: center; padding: 60px 24px 0; background: linear-gradient(#2a3442, #1a2029); }
 .recent-row button, .tab-row button, .section-body button { border: 0; border-radius: 4px; padding: 10px 14px; background: #3d4450; color: #fff; }
+/* Like Steam: only the selected tab is painted (a pill); the others are plain text. */
+.tab-row button { background: transparent; }
 .tab-row { height: 58px; display: flex; gap: 8px; align-items: center; padding: 0 24px; background: #23262e; }
 .section-body { min-height: 1500px; padding: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
 
