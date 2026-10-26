@@ -5,4 +5,5 @@ export const useRef = (v) => ({ current: v });
 export const useMemo = (f) => f();
 export const createElement = () => null;
 export const Fragment = "Fragment";
-export default { useState, useEffect, useRef, useMemo, createElement, Fragment };
+export class Component {}
+export default { useState, useEffect, useRef, useMemo, createElement, Fragment, Component };
