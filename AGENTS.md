@@ -9,13 +9,14 @@ Notes for coding agents working on Spindeck, a [Decky Loader](https://decky.xyz)
   - `WheelPage.tsx` the wheel: input, roulette, L1/R1 views, hero art
   - `HomeSwitch.tsx` / `homePatch.tsx` wheel vs Steam's original home; patch must stay last on the route
   - `settings.ts` settings model, defaults, migrations (`settingsVersion`)
-  - `i18n.ts` English + Korean strings (`ko` is the source type; `en` must match it)
+  - `i18n.ts` English + Korean strings (`ko` is the source type); `lang/*.ts` the other languages, `locale.ts` maps Steam's language names to them (`LANGS`)
   - `games.ts` library reads from Steam's internal stores (`appStore`, `collectionStore`, `SteamClient`)
   - `updater.ts` in-panel update via GitHub releases + Decky's installer
 - `main.py` — Python backend: settings file, update marker, uninstall cleanup
 - `dist/index.js` — built bundle, **committed**; rebuild after changing `src/`
 - `typecheck/` — offline type stubs for Decky/React
-- `tests/` — dev-only browser tests with stubbed Steam/Decky ([tests/README.md](tests/README.md))
+- `tests/unit/` — unit tests on `src/*.ts` (`node --test`, no dependencies); `tests/py/` — backend tests; older browser regression scripts ([tests/README.md](tests/README.md))
+- `devtools/mock/` — the plugin + real `main.py` in a browser stand-in for Steam / Decky, and the Playwright smoke + E2E tests ([its README](devtools/mock/README.md))
 - `build/` — offline bun build with shims (no `npm install` needed)
 - `.github/workflows/` — `ci.yml` (every push / PR), `release.yml` (`v*` tags)
 
@@ -23,18 +24,21 @@ Notes for coding agents working on Spindeck, a [Decky Loader](https://decky.xyz)
 
 ```bash
 npm run typecheck      # strict TS check against typecheck/ stubs — run after every change
+npm run test:unit      # unit tests (Node 24+, no install)
+npm run test:backend   # backend tests (main.py)
+npm run test:e2e       # smoke + E2E in the browser mock (first: npm install + npx playwright install chromium in devtools/mock)
+npm run mock           # the mock at http://localhost:5190, for trying UI changes without a Deck
 bun build/build.ts     # → dist/index.js
 ./scripts/package.sh   # → release/spindeck-<version>.zip
-python3 tests/py/t.py  # backend tests
 ```
 
-CI runs the typecheck, the build and the backend tests on every push and PR.
+CI runs the typecheck, the unit and backend tests, the build and the E2E suite on every push and PR.
 
 ## Rules
 
 - Steam's UI internals are not a public API. Wrap every access in try/catch and fall back to Steam's own behaviour; never let the home screen crash.
 - Anything that changes Steam's DOM, input or styles must be undone on unload: register it with `onTeardown()`.
-- New setting: add it to `WheelSettings` + `DEFAULTS` in `settings.ts`, a panel control in `index.tsx`, and both languages in `i18n.ts`. If an existing default changes, add a `settingsVersion` migration.
+- New setting: add it to `WheelSettings` + `DEFAULTS` in `settings.ts`, a panel control in `index.tsx`, and its strings in every language (`i18n.ts` + `src/lang/*.ts`). If an existing default changes, add a `settingsVersion` migration.
 - Button handlers on the wheel go through the `latest`/`call` trampolines in `WheelPage.tsx` (Steam's `Focusable` keeps stale handlers otherwise). On the Deck: Ⓨ = `Options`, Ⓧ = `Secondary`, ≡ = `Menu`.
 - Keep `README.md` and `README.ko.md` in sync (controls table, features).
 - Match the existing code: comments explain *why* (often what was seen on device), constants live in `src/constants.ts`.
@@ -43,7 +47,8 @@ CI runs the typecheck, the build and the backend tests on every push and PR.
 
 - Clickable non-button elements need both `onActivate` (Ⓐ) and `onClick` (touchscreen), like `Swatch` in `index.tsx`.
 - Steam only scrolls to follow focus: text above a panel's first focusable control is unreachable by controller. Wrap it in `<Focusable onActivate={() => {}}>` so D-pad up can land on it.
-- Every new user-facing string goes in both `ko` and `en` in `i18n.ts`; reuse an existing string when the text already exists.
+- Every new user-facing string goes in all 10 languages: `ko` and `en` in `i18n.ts`, the rest in `src/lang/*.ts` (`ko` is the type, so `tsc` fails on a missing key). Reuse an existing string when the text already exists; keep the info-line strings uppercase where the script has case.
+- Type-only imports say so (`import { type Lang } …`, `import type …`): the unit tests load `src/*.ts` through Node's type stripping, which can't tell a type from a value.
 - Check UI changes on real Steam Deck hardware before a release; the browser tests stub Steam.
 
 ### Decky Loader
@@ -68,7 +73,8 @@ Every test must be able to fail when the behaviour it names breaks. Delete fake 
 - Fake: only asserts what a stub was set up to return, prints instead of asserting, or passes with the code under test removed.
 - Redundant: same behaviour and branch as another test with no new input or edge case; keep the cheaper or more specific one.
 - To check a test is real, break the code it covers, confirm it fails, then revert.
-- Browser tests: fake Decky with `page.addInitScript` setting `window.DeckyBackend` to record calls. Time things with a `MutationObserver`, not `setTimeout` polling (background timers are throttled to ~1 s).
+- Unit tests import `src/*.ts` through `tests/unit/register.mjs` (stubs for `react` / `@decky/*`); a module whose state matters is imported fresh per case (`?case=N`). Only `.ts` files load this way, so logic worth testing doesn't belong in a `.tsx` file.
+- Browser tests: assert on what the plugin asked of Steam / Decky through the mock's event log (`mock.events(kind)`), not on internals; stub GitHub with `page.route`. Time things with a `MutationObserver`, not `setTimeout` polling (background timers are throttled to ~1 s).
 
 ### Release
 
