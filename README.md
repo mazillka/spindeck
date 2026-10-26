@@ -28,7 +28,8 @@
 | Trackpad circle (left by default) | Spin the wheel |
 | D-pad ◀ ▶ | Previous / next game |
 | L1 / R1 | The view you assigned to each in the panel (off until you pick one) |
-| Ⓐ | Open the game's page |
+| Ⓐ | Open the game's page (or launch the game, with "Ⓐ launches the game" on in the panel) |
+| Ⓧ | With "Ⓐ launches the game" on: open the game's page |
 | ≡ | Steam's game menu (Play, Properties, …) |
 | Ⓨ | Roulette: "Today's game?" (Ⓨ again stops it) |
 | D-pad ▲ | Search, like the stock home |
