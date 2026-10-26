@@ -38,6 +38,7 @@ export interface WheelSettings {
   stepDegrees: number;    // trackpad degrees per wheel step (lower = more sensitive)
   hapticDegrees: number;  // trackpad degrees per haptic click (finer than steps feels like a scroll wheel)
   rotatePad: PadSide;     // which trackpad spins the wheel
+  aLaunches: boolean;     // Ⓐ launches the game and Ⓧ opens its page (off: Ⓐ opens the page)
   language: "auto" | "ko" | "en"; // UI language; auto = follow Steam
   barLook?: { color: string; image: string; backdrop: string }; // Steam's opaque top bar, learned
 }
@@ -71,6 +72,7 @@ export const DEFAULTS: WheelSettings = {
   stepDegrees: 40,
   hapticDegrees: 5,
   rotatePad: "left",
+  aLaunches: false,
   language: "auto",
 };
 

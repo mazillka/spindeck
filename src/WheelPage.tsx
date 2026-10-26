@@ -2,7 +2,7 @@ import { Focusable, GamepadButton, GamepadEvent, Navigation } from "@decky/ui";
 import { CSSProperties, memo, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "./i18n";
 import { debug } from "./log";
-import { AppExtra, cachedAchievements, GameEntry, listCollections, loadCollectionGames, loadGames, openGamePage, overviewMinutes, subscribeAppExtra } from "./games";
+import { AppExtra, cachedAchievements, GameEntry, launch, listCollections, loadCollectionGames, loadGames, openGamePage, overviewMinutes, subscribeAppExtra } from "./games";
 import { subscribeCursorWheel, subscribeKeyboardAnalogWheel, subscribeScrollWheel } from "./padInput";
 import { getSettings, settingsLoaded, updateSettings, useSettings } from "./settings";
 import { crossedMilestone } from "./odometer";
@@ -1020,8 +1020,19 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
       onPadButton(e);
     },
     up: onPadButton,
-    // Ⓐ opens Steam's own game page.
+    // Ⓐ launches the game, Ⓧ ("Secondary") opens Steam's own game page.
+    // Panel toggle off: Ⓐ opens the game page and Ⓧ is left alone.
     ok: () => {
+      if (!s.aLaunches) return latest.current.secondary(undefined);
+      // Mid-roulette / mid-swap the selection is still moving: never launch a game in flight.
+      if (!current || spinningRef.current || fxBusy.current) return;
+      // Not installed: the game page has Steam's Install button.
+      if (!current.installed) return latest.current.secondary(undefined);
+      if (s.soundEnabled) playUiSound("launch");
+      launch(current);
+    },
+    secondary: (e?: any) => {
+      if (e) consume(e);
       if (!current) return;
       if (s.soundEnabled) playUiSound("detail");
       openGamePage(current);
@@ -1039,7 +1050,7 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
   };
   const call = useMemo(() => {
     const f = (name: string) => (e: any) => latest.current[name]?.(e);
-    return { dir: f("dir"), down: f("down"), up: f("up"), ok: f("ok"), options: f("options"), menu: f("menu") };
+    return { dir: f("dir"), down: f("down"), up: f("up"), ok: f("ok"), secondary: f("secondary"), options: f("options"), menu: f("menu") };
   }, []);
 
   const roulettePill = <RoulettePill state={roulette} accent={s.accentColor} label={roulette === "spinning" ? t.rouletteSpinning : roulette === "done" && current ? t.rouletteDone(current.name) : t.roulette} />;
@@ -1052,7 +1063,9 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
       onButtonDown={call.down}
       onButtonUp={call.up}
       onOKButton={call.ok}
-      onOKActionDescription={t.gamePage}
+      onOKActionDescription={s.aLaunches ? t.play : t.gamePage}
+      onSecondaryButton={s.aLaunches ? call.secondary : undefined}
+      onSecondaryActionDescription={s.aLaunches ? t.gamePage : undefined}
       onOptionsButton={call.options}
       onOptionsActionDescription={t.roulette}
       onMenuButton={call.menu}

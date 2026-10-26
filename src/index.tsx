@@ -406,6 +406,14 @@ function QuickAccessPanel() {
             onChange={(v) => updateSettings({ rawPadApi: v })}
           />
         </PanelSectionRow>
+        <PanelSectionRow>
+          <ToggleField
+            label={t.aLaunches}
+            description={t.aLaunchesDesc}
+            checked={s.aLaunches}
+            onChange={(v) => updateSettings({ aLaunches: v })}
+          />
+        </PanelSectionRow>
       </PanelSection>
       <PanelSection title={t.about}>
         {KOFI_URL && (
