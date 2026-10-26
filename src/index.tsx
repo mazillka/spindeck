@@ -56,11 +56,15 @@ function DeferredTextField({ label, initial, onCommit }: { label: string; initia
   const [text, setText] = useState(initial);
   const latest = useRef(initial);
   const timer = useRef<any>(null);
-  useEffect(() => () => clearTimeout(timer.current), []);
   const commit = () => {
     clearTimeout(timer.current);
+    timer.current = null;
     onCommit(latest.current);
   };
+  // Panel closed mid-pause (no blur): save what was typed instead of dropping it.
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
+  useEffect(() => () => void (timer.current && commitRef.current()), []);
   return (
     <TextField
       label={label}
