@@ -123,15 +123,22 @@ function release(button) {
 }
 
 // ───────────── @decky/ui ─────────────
-const Row = ({ label, description, children }) => (
+const Row = ({ icon, label, description, children }) => (
   <div className="row">
     <div>
-      {label && <div className="label">{label}</div>}
+      {label && (
+        <div className="label">
+          {icon && <span className="field-icon">{icon}</span>}
+          {label}
+        </div>
+      )}
       {description && <div className="desc">{description}</div>}
     </div>
     {children}
   </div>
 );
+// Decky's indentLevel: an option that belongs to the one above it.
+const indent = (level) => (level ? { paddingLeft: 10 + level * 18 } : undefined);
 const stepDir = (e, f) => {
   const b = e.detail.button;
   if (b !== B.DIR_LEFT && b !== B.DIR_RIGHT) return;
@@ -149,28 +156,28 @@ const ui = {
     </section>
   ),
   PanelSectionRow: ({ children }) => <div className="panel-row">{children}</div>,
-  ToggleField: ({ label, description, checked, onChange, disabled }) => (
-    <Focusable onActivate={() => !disabled && onChange?.(!checked)} className="field" data-label={label}>
-      <Row label={label} description={description}>
+  ToggleField: ({ icon, label, description, checked, onChange, disabled, indentLevel }) => (
+    <Focusable onActivate={() => !disabled && onChange?.(!checked)} className="field" data-label={label} style={indent(indentLevel)}>
+      <Row icon={icon} label={label} description={description}>
         <span role="switch" aria-checked={!!checked} aria-label={typeof label === "string" ? label : undefined} className={"switch" + (checked ? " on" : "")} />
       </Row>
     </Focusable>
   ),
-  SliderField: ({ label, description, value, min = 0, max = 100, step = 1, onChange, showValue }) => (
-    <Focusable onGamepadDirection={(e) => stepDir(e, (d) => onChange?.(Math.max(min, Math.min(max, value + d * step))))} className="field">
-      <Row label={label} description={description}>
+  SliderField: ({ icon, label, description, value, min = 0, max = 100, step = 1, onChange, showValue, indentLevel }) => (
+    <Focusable onGamepadDirection={(e) => stepDir(e, (d) => onChange?.(Math.max(min, Math.min(max, value + d * step))))} className="field" style={indent(indentLevel)}>
+      <Row icon={icon} label={label} description={description}>
         <span className="slider" role="slider" aria-valuenow={value} aria-label={typeof label === "string" ? label : undefined}>
           {showValue ? value : ""}
         </span>
       </Row>
     </Focusable>
   ),
-  DropdownItem: ({ label, description, rgOptions = [], selectedOption, onChange }) => {
+  DropdownItem: ({ icon, label, description, rgOptions = [], selectedOption, onChange, indentLevel }) => {
     const i = Math.max(0, rgOptions.findIndex((o) => o.data === selectedOption));
     const pick = (d) => rgOptions.length && onChange?.(rgOptions[(i + d + rgOptions.length) % rgOptions.length]);
     return (
-      <Focusable onActivate={() => pick(1)} onGamepadDirection={(e) => stepDir(e, pick)} className="field">
-        <Row label={label} description={description}>
+      <Focusable onActivate={() => pick(1)} onGamepadDirection={(e) => stepDir(e, pick)} className="field" style={indent(indentLevel)}>
+        <Row icon={icon} label={label} description={description}>
           <span className="dropdown" aria-label={typeof label === "string" ? label : undefined}>{rgOptions[i]?.label ?? "—"} ▾</span>
         </Row>
       </Focusable>

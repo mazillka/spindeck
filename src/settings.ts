@@ -40,6 +40,7 @@ export interface WheelSettings {
   hapticDegrees: number;  // trackpad degrees per haptic click (finer than steps feels like a scroll wheel)
   rotatePad: PadSide;     // which trackpad spins the wheel
   aLaunches: boolean;     // Ⓐ launches the game and Ⓧ opens its page (off: Ⓐ opens the page)
+  updateChannel: "stable" | "prerelease"; // "Check for updates": stable releases only, or pre-releases too
   language: LangSetting; // UI language; auto = follow Steam
   barLook?: { color: string; image: string; backdrop: string }; // Steam's opaque top bar, learned
 }
@@ -74,6 +75,7 @@ const DEFAULTS: WheelSettings = {
   hapticDegrees: 5,
   rotatePad: "left",
   aLaunches: false,
+  updateChannel: "stable",
   language: "auto",
 };
 

@@ -14,8 +14,8 @@ test("home: the wheel replaces Steam's home, with the library on it", async ({ p
 test("Quick Access panel: every section renders, version from package.json", async ({ page }) => {
   const errors = await open(page, undefined, "?qam");
   const qam = page.getByLabel("Quick Access");
-  for (const heading of ["Personalize", "Library", "Display", "Wheel controls", "About"]) await expect(qam.getByRole("heading", { name: heading })).toBeVisible();
-  await expect(qam.getByText(/^Spindeck v\d+\.\d+\.\d+$/)).toBeVisible();
+  for (const heading of ["Personalize", "Library", "Display", "Wheel controls", "Haptics & sound", "General", "About"]) await expect(qam.getByRole("heading", { name: heading })).toBeVisible();
+  await expect(qam.getByText(/^Spindeck v\d+\.\d+\.\d+(-[\w.]+)?$/)).toBeVisible();
   expect(errors).toEqual([]);
 });
 

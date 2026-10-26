@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the [latest release](https://github.com/justinca92/spindeck/releases/latest) gets security fixes. Update from the panel (**Check for updates**) or install the newest zip.
+Only the [latest release](https://github.com/justinca92/spindeck/releases/latest) gets security fixes. Update from the panel (**Check for updates**) or install the newest zip. Pre-releases (`vX.Y.Z-rc.N`, offered on the panel's **Pre-release** update channel) are for testing: fixes land in the next pre-release or release.
 
 ## Reporting a vulnerability
 

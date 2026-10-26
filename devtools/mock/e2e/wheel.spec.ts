@@ -1,6 +1,6 @@
 // End to end: controller input on the wheel → what the plugin asks of Steam.
 import { expect, test } from "@playwright/test";
-import { clearEvents, events, open, title, wheelReady } from "./helpers";
+import { backend, clearEvents, events, open, title, wheelReady } from "./helpers";
 
 const qam = (page) => page.getByLabel("Quick Access");
 
@@ -125,6 +125,22 @@ test("in-panel update: Decky gets the release zip with GitHub's sha256", async (
     ["utilities/install_plugin", "https://github.com/justinca92/spindeck/releases/download/v9.9.9/spindeck-9.9.9.zip", "Spindeck", "9.9.9", DIGEST, 2],
   ]);
   expect((await events(page, "backend")).flat()).toContain("prepare_update");
+});
+
+test("update channel: Stable ignores pre-releases, Pre-release offers them (and is saved)", async ({ page }) => {
+  const asset = (v: string) => ({ name: `spindeck-${v}.zip`, browser_download_url: `https://github.com/justinca92/spindeck/releases/download/v${v}/spindeck-${v}.zip`, digest: `sha256:${DIGEST}` });
+  const stable = { tag_name: "v1.4.1", assets: [asset("1.4.1")] };
+  const rc = { tag_name: "v9.9.9-rc.1", prerelease: true, assets: [asset("9.9.9-rc.1")] };
+  await page.route("https://api.github.com/**", (r) => r.fulfill({ json: r.request().url().endsWith("/latest") ? stable : [rc, stable] }));
+  await open(page, undefined, "?qam");
+  await qam(page).getByText("Check for updates").click();
+  await expect(qam(page).getByText(/You're up to date/)).toBeVisible();
+  await qam(page).locator(".field", { hasText: "Update channel" }).click(); // Stable → Pre-release
+  await expect(qam(page).getByText("Pre-release (early, less tested)")).toBeVisible();
+  await expect(qam(page).getByText(/You're up to date/)).toHaveCount(0); // the old answer is cleared
+  await qam(page).getByText("Check for updates").click();
+  await expect(qam(page).getByText("Update to v9.9.9-rc.1")).toBeVisible();
+  await expect.poll(async () => (await backend(page, "get_settings"))?.updateChannel, { timeout: 3000 }).toBe("prerelease");
 });
 
 test("in-panel update without a digest: refused, manual install suggested", async ({ page }) => {

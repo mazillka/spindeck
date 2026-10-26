@@ -50,7 +50,7 @@ Spindeck isn't in the Decky store. It installs from this repository's releases.
    - **Install Plugin from ZIP**: pick the zip after downloading it on the Deck.
 4. Open Quick Access → Spindeck. The wheel replaces the home screen right away.
 
-**Updates (1.4.1 and later):** press **Check for updates** at the bottom of the Spindeck panel. It tells you whether you're up to date or which version is available; if you choose **Update to vX**, Decky asks you to confirm once and replaces the plugin in place, keeping your settings. Spindeck never checks on its own: GitHub's public API is contacted only when you press the button. You can always update by installing the newer zip the same way as above.
+**Updates (1.4.1 and later):** press **Check for updates** at the bottom of the Spindeck panel. It tells you whether you're up to date or which version is available; if you choose **Update to vX**, Decky asks you to confirm once and replaces the plugin in place, keeping your settings. Spindeck never checks on its own: GitHub's public API is contacted only when you press the button. To try versions before they're stable, set **Update channel** (just above the button) to **Pre-release**: the check then also offers pre-releases, and moves on to the stable version once it's out. You can always update by installing the newer zip the same way as above.
 
 ## Uninstalling leaves nothing behind
 

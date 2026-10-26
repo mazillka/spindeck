@@ -55,6 +55,41 @@ test("check: API error or no plugin zip → error", async () => {
   assert.equal(useUpdateCheck().kind, "error");
 });
 
+const rel = (tag, extra = {}) => ({
+  tag_name: tag,
+  html_url: `https://github.com/justinca92/spindeck/releases/tag/${tag}`,
+  assets: [{ name: `spindeck-${tag.slice(1)}.zip`, browser_download_url: `https://github.com/justinca92/spindeck/releases/download/${tag}/spindeck-${tag.slice(1)}.zip`, digest: `sha256:${DIGEST}` }],
+  ...extra,
+});
+function serve(latest, list) {
+  const urls = [];
+  globalThis.fetch = async (url) => (urls.push(url), { ok: true, status: 200, json: async () => (url.endsWith("/latest") ? latest : list) });
+  return urls;
+}
+
+test("stable channel: only GitHub's latest release, never a pre-release", async () => {
+  const urls = serve(rel("v1.4.1"), [rel("v1.5.0-rc.1", { prerelease: true }), rel("v1.4.1")]);
+  await checkNow("stable");
+  assert.deepEqual(useUpdateCheck(), { kind: "latest", version: "1.4.1" });
+  assert.match(urls[0], /\/releases\/latest$/);
+});
+
+test("pre-release channel: the newest release, pre-releases included; drafts skipped", async () => {
+  const urls = serve(rel("v1.4.1"), [rel("v9.0.0", { draft: true }), rel("v1.5.0-rc.1", { prerelease: true }), rel("v1.4.1")]);
+  await checkNow("prerelease");
+  const st = useUpdateCheck();
+  assert.equal(st.kind, "available");
+  assert.equal(st.info.version, "1.5.0-rc.1");
+  assert.equal(st.info.hash, DIGEST);
+  assert.match(urls[0], /\/releases\?per_page=\d+$/);
+});
+
+test("pre-release channel moves on to the stable release once it's out", async () => {
+  serve(rel("v1.5.0"), [rel("v1.5.0"), rel("v1.5.0-rc.2", { prerelease: true }), rel("v1.5.0-rc.1", { prerelease: true })]);
+  await checkNow("prerelease");
+  assert.equal(useUpdateCheck().info.version, "1.5.0");
+});
+
 function decky() {
   const installs = [];
   globalThis.DeckyBackend = { call: async (...a) => installs.push(a) };
