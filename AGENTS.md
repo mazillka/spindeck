@@ -34,5 +34,5 @@ python3 tests/py/t.py  # backend tests
 - New setting: add it to `WheelSettings` + `DEFAULTS` in `settings.ts`, a panel control in `index.tsx`, and both languages in `i18n.ts`. If an existing default changes, add a `settingsVersion` migration.
 - Button handlers on the wheel go through the `latest`/`call` trampolines in `WheelPage.tsx` (Steam's `Focusable` keeps stale handlers otherwise). On the Deck: Ⓨ = `Options`, Ⓧ = `Secondary`, ≡ = `Menu`.
 - Keep `README.md` and `README.ko.md` in sync (controls table, features).
-- Release: bump `package.json` **and** `PLUGIN_VERSION` in `src/links.ts`, add `## X.Y.Z` to `RELEASE_NOTES.md` and `CHANGELOG.md`, push tag `vX.Y.Z` (the workflow checks the tag against `package.json` only).
+- Release: bump `package.json` (the build injects it as `PLUGIN_VERSION`), add `## X.Y.Z` to `RELEASE_NOTES.md` and `CHANGELOG.md`, push tag `vX.Y.Z`.
 - Match the existing code: comments explain *why* (often what was seen on device), constants live in `src/constants.ts`.
