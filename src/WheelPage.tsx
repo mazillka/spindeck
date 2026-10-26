@@ -44,6 +44,7 @@ import {
   FRAME_FALLBACK_MS,
   INPUT_SETTLE_MS,
   WINDOW_REFOCUS_DELAY_MS,
+  LIBRARY_REFRESH_MS,
   HERO_CENTER_PCT,
   HERO_BOTTOM_VIGNETTE,
   HERO_SHIFT_PCT,
@@ -75,12 +76,14 @@ const NAMES_EACH_SIDE = 3; // game names shown for the selection ± this many
 
 /** <img> that walks through candidate URLs until one loads. */
 function FallbackImg({ srcs, style, className }: { srcs: string[]; style?: CSSProperties; className?: string }) {
-  const [i, setI] = useState(0);
+  // The failed-candidate count belongs to one list: a new list starts at its first
+  // URL in the same render (an effect reset would first try the old position in it).
   const key = srcs.join("|");
-  useEffect(() => setI(0), [key]);
+  const [failed, setFailed] = useState({ key, n: 0 });
+  const i = failed.key === key ? failed.n : 0;
   if (i >= srcs.length) return <div className={className} style={{ ...style, background: "#1b2838" }} />;
   // decoding="async": decode off the main thread so a new capsule doesn't stall a frame.
-  return <img className={className} style={style} src={srcs[i]} decoding="async" onError={() => setI(i + 1)} />;
+  return <img className={className} style={style} src={srcs[i]} decoding="async" onError={() => setFailed({ key, n: i + 1 })} />;
 }
 
 /** Warm the browser cache for capsules about to come into view. */
@@ -227,7 +230,7 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
       preload(games[(sel + off) % n]?.capsule[0]);
       preload(games[(((sel - off) % n) + n) % n]?.capsule[0]);
     }
-  }, [sel, n]);
+  }, [sel, games]);
 
   if (!n) return null;
   // Integer part picks the games, fraction slides them.
@@ -538,6 +541,10 @@ interface WheelPageProps {
 export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, active = true }: WheelPageProps) {
   const s = useSettings();
   const t = useT();
+  // Bumped when Steam's window gets focus back (a game closed, an install or the
+  // Quick Access panel finished), so installs / uninstalls / new plays and
+  // renamed collections show up.
+  const [libraryRev, setLibraryRev] = useState(0);
   // Three slots in a row: [L1 pick] — base view — [R1 pick], each with its own sort.
   // L1/R1 move one step left/right (no wrap-around).
   const views = useMemo<WheelView[]>(() => {
@@ -554,16 +561,13 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
     // The main view can't be empty: a deleted collection falls back to installed games.
     const base = make(s.baseView, "base", s.sortMode) ?? make("base:installed", "base", s.sortMode)!;
     return [make(s.l1View, "l1", s.l1Sort), base, make(s.r1View, "r1", s.r1Sort)].filter((v): v is WheelView => !!v);
-  }, [s.baseView, s.sortMode, s.l1View, s.l1Sort, s.r1View, s.r1Sort, t]);
+  }, [s.baseView, s.sortMode, s.l1View, s.l1Sort, s.r1View, s.r1Sort, t, libraryRev]);
   const baseKey = views.find((v) => v.key.startsWith("base:"))!.key;
   const [viewKey, setViewKey] = useState<string>(() => lastViewKey ?? baseKey);
   const view = views.find((v) => v.key === viewKey) ?? views.find((v) => v.key === baseKey) ?? views[0];
   useEffect(() => {
     lastViewKey = view.key;
   }, [view.key]);
-  // Bumped when Steam's window gets focus back (a game closed, an install or the
-  // Quick Access panel finished), so installs / uninstalls / new plays show up.
-  const [libraryRev, setLibraryRev] = useState(0);
   const games = useMemo<GameEntry[]>(
     () => (view.collection ? loadCollectionGames(view.collection, view.sort) : loadGames(view.installedOnly, view.sort)),
     [view.key, view.sort, libraryRev],
@@ -806,6 +810,26 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
   // only runs while our window and the wheel itself are focused. Re-enable only
   // once focus has been stable: switching the action set right as the Steam menu
   // closes made Steam reopen the menu.
+  // Rebuilding the list reads every game from Steam's stores: only while the wheel
+  // is showing and not mid-roulette (a new list would jump the selection under the
+  // spin), at most every LIBRARY_REFRESH_MS. A refresh asked for meanwhile waits
+  // until the wheel is shown again.
+  const lastRefresh = useRef(Date.now());
+  const refreshPending = useRef(false);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const refreshLibrary = () => {
+    if (!activeRef.current || spinningRef.current || Date.now() - lastRefresh.current < LIBRARY_REFRESH_MS) {
+      refreshPending.current = true;
+      return;
+    }
+    refreshPending.current = false;
+    lastRefresh.current = Date.now();
+    setLibraryRev((r) => r + 1);
+  };
+  useEffect(() => {
+    if (active && refreshPending.current) refreshLibrary();
+  }, [active]);
   const [winFocused, setWinFocused] = useState(true);
   useEffect(() => {
     const view: any = rootRef.current?.ownerDocument?.defaultView;
@@ -815,8 +839,7 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
       clearTimeout(tm);
       tm = setTimeout(() => {
         setWinFocused(true);
-        // Not mid-roulette: a new list would jump the selection under the spin.
-        if (!spinningRef.current) setLibraryRev((r) => r + 1);
+        refreshLibrary();
       }, WINDOW_REFOCUS_DELAY_MS);
     };
     const off = () => {

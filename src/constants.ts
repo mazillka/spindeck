@@ -20,6 +20,8 @@ export const ARRIVAL_IGNORE_MS = 700;
 export const CIRCLE_START_DELAY_MS = 500;
 /** …and after Quick Access / the Steam menu closes (window refocus). */
 export const WINDOW_REFOCUS_DELAY_MS = 800;
+/** Re-read the library on window focus at most this often (a big library takes a moment to read). */
+export const LIBRARY_REFRESH_MS = 10_000;
 /** No wheel haptics this long after Ⓑ (a stray pad step could tick). */
 export const HAPTIC_MUTE_AFTER_B_MS = 500;
 

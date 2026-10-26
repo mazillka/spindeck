@@ -72,6 +72,21 @@ test("trackpad circle spins the wheel, with a haptic tick on that pad", async ({
   expect((await events(page, "haptic")).length).toBeGreaterThan(3);
 });
 
+test("a game installed meanwhile shows up when Steam's window regains focus, selection kept", async ({ page }) => {
+  await open(page);
+  await wheelReady(page);
+  await page.evaluate(() => {
+    const now = Math.floor(Date.now() / 1000);
+    (window as any).mock.apps.push({ appid: 4242, app_type: 1, display_name: "Fresh Install", installed: true, rt_last_time_played: now + 60 });
+  });
+  await page.waitForTimeout(10_500); // the list read at start-up counts as fresh for LIBRARY_REFRESH_MS
+  await page.evaluate(() => (window.dispatchEvent(new Event("blur")), window.dispatchEvent(new Event("focus"))));
+  await page.waitForTimeout(1200); // WINDOW_REFOCUS_DELAY_MS
+  await expect(title(page)).toHaveText("AETHER DRIFT"); // still on the game you were on
+  await page.keyboard.press("ArrowLeft");
+  await expect(title(page)).toHaveText("FRESH INSTALL"); // the new one, most recent first
+});
+
 test("L1 / R1 switch to the assigned views", async ({ page }) => {
   await open(page, { r1View: "favorite", viewAnim: false });
   await wheelReady(page);
