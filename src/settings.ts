@@ -2,7 +2,7 @@
 // survive reboots and Steam client restarts. The backend deletes that file
 // when the plugin is uninstalled.
 import { callable } from "@decky/api";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { getLang, type LangSetting } from "./locale";
 import { STRINGS } from "./i18n";
 
@@ -155,18 +155,6 @@ export function updateSettings(patch: Partial<WheelSettings>) {
   }, 400);
 }
 
-function useStore<T>(read: () => T): T {
-  const [v, setV] = useState(read);
-  useEffect(() => {
-    const l = () => setV(read());
-    listeners.add(l);
-    l();
-    return () => {
-      listeners.delete(l);
-    };
-  }, []);
-  return v;
-}
-
-export const useSettings = () => useStore(() => current);
-export const useSettingsLoaded = () => useStore(() => loaded);
+const subscribe = (l: () => void) => (listeners.add(l), () => void listeners.delete(l));
+export const useSettings = () => useSyncExternalStore(subscribe, () => current);
+export const useSettingsLoaded = () => useSyncExternalStore(subscribe, () => loaded);

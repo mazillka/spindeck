@@ -4,6 +4,7 @@ export const useEffect = () => {};
 export const useLayoutEffect = () => {};
 export const useRef = (v) => ({ current: v });
 export const useMemo = (f) => f();
+export const useSyncExternalStore = (_subscribe, getSnapshot) => getSnapshot();
 export const createElement = () => null;
 export const Fragment = "Fragment";
 export class Component {}

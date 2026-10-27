@@ -1,7 +1,7 @@
 // UI language: Steam's own UI language when Spindeck has it (see LANGS),
 // English otherwise — or forced by the "Language" setting. Also decides
 // whether the Hangul keypad is offered (Korean only).
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { getSettings, useSettings } from "./settings";
 
 export type Lang = "en" | "ko" | "de" | "fr" | "es" | "pt" | "ru" | "uk" | "ja" | "zh";
@@ -71,16 +71,9 @@ export function getLang(): Lang {
   return resolve(getSettings().language);
 }
 
+const subscribe = (l: () => void) => (askSteam(), listeners.add(l), () => void listeners.delete(l));
 export function useLang(): Lang {
   const s = useSettings();
-  const [, bump] = useState(0);
-  useEffect(() => {
-    askSteam();
-    const l = () => bump((v) => v + 1);
-    listeners.add(l);
-    return () => {
-      listeners.delete(l);
-    };
-  }, []);
+  useSyncExternalStore(subscribe, () => detected.raw); // re-render when Steam reports its language
   return resolve(s.language);
 }

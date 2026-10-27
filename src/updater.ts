@@ -4,7 +4,7 @@
 // and replaces the plugin in place. The backend's prepare_update marks the
 // next uninstall as part of an update, so the user's settings are kept.
 import { callable } from "@decky/api";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { PLUGIN_VERSION } from "./links";
 import { debug } from "./log";
 
@@ -119,15 +119,8 @@ export async function startUpdate(info: UpdateInfo): Promise<boolean> {
   }
 }
 
-export function useUpdateCheck(): UpdateState {
-  const [, force] = useState(0);
-  useEffect(() => {
-    const l = () => force((n) => n + 1);
-    listeners.add(l);
-    return () => void listeners.delete(l);
-  }, []);
-  return state;
-}
+const subscribe = (l: () => void) => (listeners.add(l), () => void listeners.delete(l));
+export const useUpdateCheck = (): UpdateState => useSyncExternalStore(subscribe, () => state);
 
 /** Forget the last check (e.g. the channel changed, so its answer no longer applies). */
 export function resetUpdateCheck() {
