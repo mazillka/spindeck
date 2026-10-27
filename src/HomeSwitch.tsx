@@ -6,7 +6,7 @@ import { getSettings, updateSettings, useSettings, useSettingsLoaded } from "./s
 import { playUiSound } from "./sound";
 import { onTeardown, SafeBoundary } from "./safety";
 import { debug } from "./log";
-import { BarLook, CLEAR_CLASS, CLEAR_PROPS, ensureClearStyle, focusablesIn, focusFirstIn, headerStrips, learnBarLook, learnedBarLook, removeInjectedStyles, seedBarLook, StyleKeeper, topBarBottom } from "./steamDom";
+import { CLEAR_CLASS, CLEAR_PROPS, ensureClearStyle, focusablesIn, focusFirstIn, headerStrips, learnBarLook, learnedBarLook, removeInjectedStyles, seedBarLook, StyleKeeper, topBarBottom } from "./steamDom";
 import {
   HEADER_REAPPLY_MS,
   HEADER_RESCAN_MS,
@@ -285,7 +285,8 @@ function syncHeader(keeper: StyleKeeper, doc: Document, screen: Screen, host: HT
     releaseRow(row);
     keeper.keepOnly(new Set());
     const fresh = learnBarLook(strips);
-    if (fresh) saveBarLook(fresh);
+    // Saved, so the band is right from the first frame next time.
+    if (fresh) updateSettings({ barLook: fresh });
   }
   const look = learnedBarLook();
   if (!row || !rowVisible || !look) {
@@ -322,10 +323,6 @@ function syncHeader(keeper: StyleKeeper, doc: Document, screen: Screen, host: HT
 
 
 
-/** Persist the learned look so the band is right from the first frame next time. */
-function saveBarLook(look: BarLook) {
-  updateSettings({ barLook: look });
-}
 
 // ───────────────────────── Component ─────────────────────────
 type Screen = "wheel" | "sections";
