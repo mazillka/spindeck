@@ -99,9 +99,6 @@ export async function initSettings() {
     }
     // 1.2.0: "Show" became a full view pick (library or collection).
     if (saved && !("baseView" in saved) && merged.libraryScope) merged.baseView = `base:${merged.libraryScope}`;
-    delete merged.libraryScope;
-    delete merged.installedOnly;
-    delete merged.clockwiseIsNext; // option removed in 0.2.3
     const v: number = merged.settingsVersion;
     // v2–v4 (0.4.2–0.5.14): the raw controller API (the only path that sees the
     // LEFT trackpad) went on, off, then on again once circle rubbing was confirmed on device.
@@ -121,14 +118,8 @@ export async function initSettings() {
       merged.settingsVersion = DEFAULTS.settingsVersion;
       needsSave = true;
     }
-    delete merged.dockedNoHaptics; // 1.3.0 test builds only
-    delete merged.shelfCollections; // 1.2.0 pre-release builds only
-    delete merged.favoritesOnL1;
-    delete merged.hapticMode;
-    delete merged.hideRecentShelf; // always on since 0.9.4 (toggle removed)
-    delete merged.checkUpdates; // 1.4.1 test builds only
-    delete merged.updateNotified; // 1.4.1 test builds only
-    current = merged;
+    // Only keys this version knows: anything an older (or test) build saved is dropped.
+    current = Object.fromEntries(Object.entries(merged).filter(([k]) => k in DEFAULTS || k === "barLook")) as any;
     if (needsSave) backendSet(current).catch(() => {});
   } catch (e) {
     console.error("[Spindeck] failed to load settings", e);
