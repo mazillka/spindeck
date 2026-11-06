@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- **Wheel positions:** Display → Wheel position adds Side (opposite edge), Bottom (centre) and Top (upper corner), and a Wheel centre slider (`wheelXPct`, 0–100 % from the left) for Bottom and Top. `placement()` in `settings.ts` turns them into the drawn layout; the art and custom text take the side away from the wheel. Saved `side` / `bottom` settings look as before; an unknown position falls back to Side.
+
 ### Fixed
 - **Unknown home layout:** ▼ to the sections now moves focus off the hidden wheel (`revealSections` focuses the first item when it can't read the layout). Before, ▲ then went to search instead of back to the wheel.
 - **Steam re-rendering its whole home** while the sections are shown: the new recent row is hidden too and the sections are put back in place (checked every `HEADER_REAPPLY_MS`). Before, the band stretched over the unhidden row.

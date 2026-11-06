@@ -4,7 +4,7 @@ import { useT } from "./i18n";
 import { debug } from "./log";
 import { AppExtra, cachedAchievements, GameEntry, launch, listCollections, loadCollectionGames, loadGames, openGamePage, overviewMinutes, subscribeAppExtra } from "./games";
 import { subscribeCursorWheel, subscribeKeyboardAnalogWheel, subscribeScrollWheel } from "./padInput";
-import { getSettings, settingsLoaded, updateSettings, useSettings } from "./settings";
+import { getSettings, placement, settingsLoaded, updateSettings, useSettings, type WheelLayout } from "./settings";
 import { crossedMilestone } from "./odometer";
 import { onWheelReset } from "./reset";
 import { deckInHands, watchControllers } from "./controllers";
@@ -55,7 +55,6 @@ import {
   WHEEL_VIGNETTE,
   INFO_ROW_HEIGHT,
   INFO_MAX_WIDTH_PCT,
-  BOTTOM_WHEEL_X,
   BOTTOM_SELECTED_Y,
   BOTTOM_SELECTED_GAP_DEG,
   BOTTOM_TITLE_GAP_PX,
@@ -66,6 +65,7 @@ import {
   HERO_ASPECT,
   BOTTOM_ROULETTE_GAP_PX,
   BOTTOM_LAYOUT_WHEEL_VIGNETTE,
+  TOP_LAYOUT_WHEEL_VIGNETTE,
 } from "./constants";
 
 const BASE_CAPSULE_W = 80;
@@ -171,19 +171,17 @@ class WheelMotion {
   }
 }
 
-export type WheelLayout = "side" | "bottom";
-
 /**
  * Where the wheel's circle is. Side: centre just off the screen edge, half
- * the ring showing. Bottom: centre below the screen, between the corner and
- * the bottom centre, so the top of the ring rises from the bottom edge with
- * the selected game at its top.
+ * the ring showing. Bottom: centre below the screen, `wheelX` of the width from
+ * the left, so the top of the ring rises from the bottom edge with
+ * the selected game at its top. Top: the same upside down, hanging from the top edge.
  */
-function wheelGeom(layout: WheelLayout, flip: boolean, W: number, H: number, wheelSizePct: number) {
+function wheelGeom(layout: WheelLayout, flip: boolean, W: number, H: number, wheelSizePct: number, wheelX: number) {
   const R = W * (wheelSizePct / 100);
-  if (layout === "bottom") {
-    return { cx: W * (flip ? BOTTOM_WHEEL_X : 1 - BOTTOM_WHEEL_X), cy: H * BOTTOM_SELECTED_Y + R, R };
-  }
+  const cx = W * wheelX;
+  if (layout === "bottom") return { cx, cy: H * BOTTOM_SELECTED_Y + R, R };
+  if (layout === "top") return { cx, cy: H * (1 - BOTTOM_SELECTED_Y) - R, R };
   return { cx: flip ? -W * 0.02 : W * 1.02, cy: H / 2, R };
 }
 
@@ -195,6 +193,7 @@ interface RingProps {
   W: number;
   H: number;
   flip: boolean;
+  wheelX: number;
   wheelSizePct: number;
   visibleCount: number;
   capsuleScale: number;
@@ -213,14 +212,17 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
   const n = games.length;
   const [, rerender] = useState(0);
 
-  const bottom = p.layout === "bottom";
-  const { cx, cy, R } = wheelGeom(p.layout, flip, W, H, p.wheelSizePct);
+  const arc = p.layout !== "side"; // bottom or top: an arc across the screen, the selection at its tip
+  const top = p.layout === "top";
+  const { cx, cy, R } = wheelGeom(p.layout, flip, W, H, p.wheelSizePct, p.wheelX);
   // Spread `visibleCount` games over the part of the arc that fits on screen
-  // (side: above and below the centre; bottom: either side of the top).
-  const visibleHalfAngle = bottom
-    ? (Math.PI / 2 - Math.asin(Math.max(-1, Math.min(1, (cy - H) / R)))) * 0.92
+  // (side: above and below the centre; bottom / top: either side of the tip).
+  // `past`: how far the centre sits beyond the screen edge the arc rises from.
+  const past = top ? -cy : cy - H;
+  const visibleHalfAngle = arc
+    ? (Math.PI / 2 - Math.asin(Math.max(-1, Math.min(1, past / R)))) * 0.92
     : Math.asin(Math.min(1, H / 2 / R)) * 0.92;
-  const gapRad = bottom ? (BOTTOM_SELECTED_GAP_DEG * Math.PI) / 180 : 0;
+  const gapRad = arc ? (BOTTOM_SELECTED_GAP_DEG * Math.PI) / 180 : 0;
   const visibleEachSide = Math.max(1, Math.floor((p.visibleCount - 1) / 2));
   const spacingRad = visibleHalfAngle / visibleEachSide;
   const capW = BASE_CAPSULE_W * p.capsuleScale;
@@ -240,18 +242,19 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
   const frameAt = (rel: number) => {
     // Next games sit clockwise from the selection.
     // Side, right wheel: π = pointing left at the art. Left wheel: 0 = pointing right.
-    // Bottom: π/2 = straight up; a little extra room on each side of the selection.
+    // Bottom: π/2 = straight up; top: -π/2 = straight down (next games to the right
+    // in both); a little extra room on each side of the selection.
     const phi = rel * spacingRad + Math.max(-1, Math.min(1, rel)) * gapRad;
-    const theta = bottom ? Math.PI / 2 - phi : flip ? -rel * spacingRad : Math.PI + rel * spacingRad;
+    const theta = arc ? (top ? phi - Math.PI / 2 : Math.PI / 2 - phi) : flip ? -rel * spacingRad : Math.PI + rel * spacingRad;
     const x = cx + R * Math.cos(theta);
     const y = cy - R * Math.sin(theta);
     const dist = Math.abs(rel);
     const scale = dist < 1 ? 1 - 0.23 * dist : Math.max(0.55, 0.82 - dist * 0.05);
     // Anchor the capsule's centre on the arc; the title extends away from the art.
-    // Bottom: centred on the arc, leaning along it; no side titles (the
-    // selected game's name sits above it, drawn by the page).
-    const transform = bottom
-      ? `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${((phi * 180) / Math.PI).toFixed(2)}deg) scale(${scale})`
+    // Bottom / top: centred on the arc, leaning along it; no side titles (the
+    // selected game's name sits above / below it, drawn by the page).
+    const transform = arc
+      ? `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${(((top ? -phi : phi) * 180) / Math.PI).toFixed(2)}deg) scale(${scale})`
       : flip
         ? `translate(${x}px, ${y}px) translate(calc(-100% + ${capW / 2}px), -50%) scale(${scale})`
         : `translate(${x}px, ${y}px) translate(${-capW / 2}px, -50%) scale(${scale})`;
@@ -305,7 +308,7 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
           left: 0,
           top: 0,
           transform: f.transform,
-          transformOrigin: bottom ? "center" : flip ? "right center" : "left center",
+          transformOrigin: arc ? "center" : flip ? "right center" : "left center",
           flexDirection: flip ? "row-reverse" : "row",
           display: "flex",
           alignItems: "center",
@@ -347,7 +350,7 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
         </div>
         {/* Always rendered (opacity only) — mounting/unmounting names at the
             edge while spinning cost extra layout. */}
-          {!bottom && <div
+          {!arc && <div
             ref={(el: HTMLDivElement | null) => void (slot.name = el)}
             style={{
               maxWidth: Math.max(200, 300 * p.textScale),
@@ -376,7 +379,9 @@ const WheelRing = memo(function WheelRing(p: RingProps) {
 
 /** Selected game's art, blurred background + sharp foreground. Changes only once the wheel rests. */
 const Hero = memo(function Hero({ game, flip, heroScale, wheelSizePct, layout, legacy }: { game: GameEntry | undefined; flip: boolean; heroScale: number; wheelSizePct: number; layout: WheelLayout; legacy?: boolean }) {
-  const bottom = layout === "bottom";
+  // Bottom: art across the top. Top: the same upside down, art across the bottom.
+  const bottom = layout !== "side";
+  const top = layout === "top";
   if (!game) return null;
   const srcs = [...game.hero, ...game.capsule];
   // Side layout, "Hero art v1.3.0 style": the art exactly as 1.3.0 drew it.
@@ -396,12 +401,12 @@ const Hero = memo(function Hero({ game, flip, heroScale, wheelSizePct, layout, l
   const artBox: CSSProperties = bottom
     ? {
         position: "absolute",
-        top: -HERO_EDGE_CLIP_PX,
+        [top ? "bottom" : "top"]: -HERO_EDGE_CLIP_PX,
         left: -HERO_EDGE_CLIP_PX,
         width: `calc(100% + ${HERO_EDGE_CLIP_PX * 2}px)`,
         maxHeight: "92%",
         objectFit: "cover",
-        objectPosition: "center top",
+        objectPosition: top ? "center bottom" : "center top",
       }
     : {
         position: "absolute",
@@ -449,7 +454,7 @@ const Hero = memo(function Hero({ game, flip, heroScale, wheelSizePct, layout, l
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          background: bottom ? BOTTOM_LAYOUT_WHEEL_VIGNETTE : `linear-gradient(to ${flip ? "right" : "left"}, rgba(0,0,0,${WHEEL_VIGNETTE[0]}) 0%, rgba(0,0,0,${WHEEL_VIGNETTE[1]}) ${(ring * 100).toFixed(1)}%, rgba(0,0,0,${WHEEL_VIGNETTE[2]}) ${((ring + WHEEL_VIGNETTE_WIDTH / 2) * 100).toFixed(1)}%, transparent ${((ring + WHEEL_VIGNETTE_WIDTH) * 100).toFixed(1)}%)`,
+          background: bottom ? (top ? TOP_LAYOUT_WHEEL_VIGNETTE : BOTTOM_LAYOUT_WHEEL_VIGNETTE) : `linear-gradient(to ${flip ? "right" : "left"}, rgba(0,0,0,${WHEEL_VIGNETTE[0]}) 0%, rgba(0,0,0,${WHEEL_VIGNETTE[1]}) ${(ring * 100).toFixed(1)}%, rgba(0,0,0,${WHEEL_VIGNETTE[2]}) ${((ring + WHEEL_VIGNETTE_WIDTH / 2) * 100).toFixed(1)}%, transparent ${((ring + WHEEL_VIGNETTE_WIDTH) * 100).toFixed(1)}%)`,
         }}
       />
       <FallbackImg
@@ -461,7 +466,7 @@ const Hero = memo(function Hero({ game, flip, heroScale, wheelSizePct, layout, l
           // art side, leaving the bottom for the game info and corner text.
           ...artBox,
           transform: lift || "none",
-          WebkitMaskImage: `linear-gradient(to bottom, ${vFade}), ${sideFade}`,
+          WebkitMaskImage: `linear-gradient(to ${top ? "top" : "bottom"}, ${vFade}), ${sideFade}`,
           WebkitMaskComposite: "source-in",
           // Some hero art has a light 1–2px border, and a scaled, half-pixel-
           // positioned image can leak its edge row past the mask: drawn as a
@@ -469,7 +474,8 @@ const Hero = memo(function Hero({ game, flip, heroScale, wheelSizePct, layout, l
           clipPath: bottom ? "none" : `inset(${HERO_EDGE_CLIP_PX}px)`,
         }}
       />
-      <div style={{ position: "absolute", inset: 0, background: HERO_BOTTOM_VIGNETTE, pointerEvents: "none" }} />
+      {/* Darkens the bottom for the text there; the top layout has its art there instead. */}
+      {!top && <div style={{ position: "absolute", inset: 0, background: HERO_BOTTOM_VIGNETTE, pointerEvents: "none" }} />}
     </>
   );
 });
@@ -1044,19 +1050,26 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
     consume(e);
   };
 
-  const flip = s.rotatePad === "left"; // left pad → wheel on the left edge, art on the right
-  const layout: WheelLayout = s.layout === "bottom" ? "bottom" : "side";
-  const bottom = layout === "bottom";
-  const geom = wheelGeom(layout, flip, size.w, size.h, s.wheelSizePct);
+  // Left pad → wheel on the left edge, art on the right (the opposite position swaps them).
+  const { layout, flip, wheelX } = placement(s.layout, s.rotatePad === "left", s.wheelXPct);
+  const bottom = layout !== "side"; // bottom or top: the arc layouts share the name and custom-text blocks
+  const top = layout === "top";
+  const geom = wheelGeom(layout, flip, size.w, size.h, s.wheelSizePct, wheelX);
   // Bottom layout: where the name block above the selected game ends (its bottom);
-  // the custom text on the other side uses the same anchor so the two stay level.
-  const bottomTitleY = geom.cy - geom.R - (BASE_CAPSULE_H * s.capsuleScale) / 2 - BOTTOM_TITLE_GAP_PX;
-  // Where the bottom layout's hero art ends for a standard hero image (it spans the
-  // full width from the top, so this follows the screen's shape). Fixed, not per
-  // game, so the text never jumps while spinning.
-  const ownerTop =
+  // top layout: where the block below it starts (its top).
+  const capHalf = (BASE_CAPSULE_H * s.capsuleScale) / 2 + BOTTOM_TITLE_GAP_PX;
+  const titleY = top ? geom.cy + geom.R + capHalf : geom.cy - geom.R - capHalf;
+  // How far the hero art reaches from its edge (the top; the bottom in the top
+  // layout) for a standard hero image (it spans the full width, so this follows
+  // the screen's shape). Fixed, not per game, so the text never jumps while spinning.
+  const ownerFromEdge =
     Math.min(size.h * 0.92, (size.w + HERO_EDGE_CLIP_PX * 2) / HERO_ASPECT - HERO_EDGE_CLIP_PX) + BOTTOM_OWNER_BELOW_ART_PX;
-  const ownerLine: CSSProperties = { display: "block", maxWidth: `${BOTTOM_OWNER_MAX_WIDTH_PCT}vw`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
+  // The custom text (on the far side from the wheel) stays clear of the name block
+  // centred over it: narrower the closer the wheel gets to the middle. (It starts
+  // where the name block ends, so it only has to clear its width, seen on device.)
+  const farPct = (flip ? 1 - wheelX : wheelX) * 100;
+  const ownerMaxVw = Math.max(10, Math.min(BOTTOM_OWNER_MAX_WIDTH_PCT, farPct - BOTTOM_TITLE_MAX_WIDTH_PCT / 2));
+  const ownerLine: CSSProperties = { display: "block", maxWidth: `${ownerMaxVw}vw`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
   // The icon info line for the resting game (playtime · last played · achievements · friends).
   const renderInfo = () =>
     current && infoReady ? (
@@ -1180,6 +1193,7 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
           W={size.w}
           H={size.h}
           flip={flip}
+          wheelX={wheelX}
           wheelSizePct={s.wheelSizePct}
           visibleCount={s.visibleCount}
           capsuleScale={s.capsuleScale}
@@ -1195,8 +1209,8 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
             style={{
               position: "absolute",
               left: geom.cx,
-              top: bottomTitleY,
-              transform: "translate(-50%, -100%)",
+              top: titleY,
+              transform: top ? "translateX(-50%)" : "translate(-50%, -100%)",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -1247,14 +1261,14 @@ export function WheelPage({ mode = "page", onWheelFocus, onRequestSections, acti
 
         {/* Bottom layout: the custom text, with the Ⓨ "Today's game?" pill right
             under it, on the side away from the wheel, just below where the hero
-            art ends (its fade into the backdrop). */}
+            art ends (its fade into the backdrop). Top layout: just above the art. */}
         {bottom && (
           <div
             data-dw="owner"
             style={{
               position: "absolute",
               [flip ? "right" : "left"]: 40,
-              top: ownerTop,
+              [top ? "bottom" : "top"]: ownerFromEdge,
               display: "flex",
               flexDirection: "column",
               alignItems: flip ? "flex-end" : "flex-start",

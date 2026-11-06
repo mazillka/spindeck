@@ -29,7 +29,9 @@ import { IconLabel, Icons } from "./icons";
 import {
   PadSide,
   SortMode,
+  WheelPosition,
   WheelSettings,
+  placement,
   initSettings,
   updateSettings,
   useSettings,
@@ -164,6 +166,7 @@ function QuickAccessPanel() {
   const [padRev, setPadRev] = useState(0); // …and after the Hangul keypad edits them
   const t = useT();
   const korean = useLang() === "ko"; // Hangul keypad buttons only for a Korean Steam UI
+  const sideLayout = placement(s.layout, false).layout === "side"; // side or opposite edge (or a value this build doesn't know)
   // Grouped by what you're changing, most-used first. Options that only matter
   // because of another one sit indented right under it.
   return (
@@ -258,12 +261,32 @@ function QuickAccessPanel() {
             description={t.layoutDesc}
             rgOptions={[
               { data: "side", label: t.layoutSide },
+              { data: "opposite", label: t.layoutOpposite },
               { data: "bottom", label: t.layoutBottom },
+              { data: "center", label: t.layoutCenter },
+              { data: "top", label: t.layoutTop },
             ]}
-            selectedOption={s.layout === "bottom" ? "bottom" : "side"}
-            onChange={(o) => updateSettings({ layout: o.data as "side" | "bottom" })}
+            selectedOption={sideLayout ? (s.layout === "opposite" ? "opposite" : "side") : s.layout}
+            onChange={(o) => updateSettings({ layout: o.data as WheelPosition })}
           />
         </PanelSectionRow>
+        {/* Bottom / top: where the wheel's centre sits, left edge (0) to right edge (100). */}
+        {(s.layout === "bottom" || s.layout === "top") && (
+          <PanelSectionRow>
+            <SliderField
+              icon={<Icons.layout />}
+              label={t.wheelX}
+              description={t.wheelXDesc}
+              indentLevel={1}
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(placement(s.layout, s.rotatePad === "left", s.wheelXPct).wheelX * 100)}
+              showValue
+              onChange={(v) => updateSettings({ wheelXPct: v })}
+            />
+          </PanelSectionRow>
+        )}
         <PanelSectionRow>
           <SliderField icon={<Icons.size />} label={t.wheelSize} description={t.pctOfWidth} min={30} max={60} step={2} value={s.wheelSizePct} showValue onChange={(v) => updateSettings({ wheelSizePct: v })} />
         </PanelSectionRow>
@@ -299,7 +322,7 @@ function QuickAccessPanel() {
         <PanelSectionRow>
           <SliderField icon={<Icons.hero />} label={t.heroSize} description={t.pctOfWidth} min={40} max={150} step={5} value={s.heroScale} showValue onChange={(v) => updateSettings({ heroScale: v })} />
         </PanelSectionRow>
-        {s.layout !== "bottom" && (
+        {sideLayout && (
           <PanelSectionRow>
             <ToggleField icon={<Icons.history />} label={t.heroV130} description={t.heroV130Desc} indentLevel={1} checked={s.heroV130} onChange={(v) => updateSettings({ heroV130: v })} />
           </PanelSectionRow>

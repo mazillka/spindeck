@@ -126,3 +126,5 @@ export const BOTTOM_OWNER_MAX_WIDTH_PCT = 40;
 /** Bottom layout: dark fade rising from the bottom, where the wheel sits (over the blurred backdrop, under the art). */
 export const BOTTOM_LAYOUT_WHEEL_VIGNETTE =
   "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.75) 28%, rgba(0,0,0,0.35) 48%, transparent 66%)";
+/** Top layout (the bottom layout upside down): the same fade, down from the top edge where the wheel hangs. */
+export const TOP_LAYOUT_WHEEL_VIGNETTE = BOTTOM_LAYOUT_WHEEL_VIGNETTE.replace("to top", "to bottom");

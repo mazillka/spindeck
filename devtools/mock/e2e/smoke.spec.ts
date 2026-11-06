@@ -50,11 +50,12 @@ test("backend round-trip: settings written by the panel reach main.py", async ({
   await expect.poll(async () => (await backend(page, "get_settings"))?.soundEnabled, { timeout: 3000 }).toBe(false);
 });
 
-test("the v1.3.0 hero art option is offered only for the side layout", async ({ page }) => {
-  await open(page, undefined, "?qam");
-  const qam = page.getByLabel("Quick Access");
-  await expect(qam.getByText("Hero art v1.3.0 style")).toBeVisible();
-  await open(page, { layout: "bottom" }, "?qam");
-  await expect(page.getByLabel("Quick Access").getByText("Wheel position")).toBeVisible();
-  await expect(page.getByLabel("Quick Access").getByText("Hero art v1.3.0 style")).toHaveCount(0);
+test("the v1.3.0 hero art option is offered only for the side layouts, the wheel centre slider only for bottom / top", async ({ page }) => {
+  for (const [layout, hero, slider] of [["side", 1, 0], ["opposite", 1, 0], ["bottom", 0, 1], ["top", 0, 1], ["center", 0, 0]] as const) {
+    await open(page, { layout }, "?qam");
+    const qam = page.getByLabel("Quick Access");
+    await expect(qam.getByText("Wheel position")).toBeVisible();
+    await expect(qam.getByText("Hero art v1.3.0 style"), layout).toHaveCount(hero);
+    await expect(qam.getByText("Wheel centre", { exact: true }), layout).toHaveCount(slider);
+  }
 });

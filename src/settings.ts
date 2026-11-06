@@ -5,9 +5,31 @@ import { callable } from "@decky/api";
 import { useSyncExternalStore } from "react";
 import { getLang, type LangSetting } from "./locale";
 import { STRINGS } from "./i18n";
+import { BOTTOM_WHEEL_X } from "./constants";
 
 export type SortMode = "recent" | "alpha" | "playtime";
 export type PadSide = "left" | "right";
+/** Side / bottom / top follow the rotating trackpad's side; "opposite" is the other screen edge, "center" the bottom centre. */
+export type WheelPosition = "side" | "opposite" | "bottom" | "center" | "top";
+export type WheelLayout = "side" | "bottom" | "top";
+
+/**
+ * The "Wheel position" setting → how the wheel is drawn: its shape, which side
+ * it's on (flip = left half, art and custom text on the right) and, for bottom /
+ * top, its centre's share of the width from the left. `wheelXPct` (bottom / top)
+ * puts that centre anywhere from the left edge (0) to the right (100); below 0
+ * it's the corner on the trackpad's side. An unknown position (a newer build's)
+ * is the side layout.
+ */
+export function placement(pos: WheelPosition, padLeft: boolean, wheelXPct = -1): { layout: WheelLayout; flip: boolean; wheelX: number } {
+  const layout: WheelLayout = pos === "bottom" || pos === "center" ? "bottom" : pos === "top" ? "top" : "side";
+  if (layout === "side") {
+    const flip = padLeft !== (pos === "opposite");
+    return { layout, flip, wheelX: flip ? 0 : 1 };
+  }
+  const wheelX = pos === "center" ? 0.5 : wheelXPct >= 0 ? Math.min(100, wheelXPct) / 100 : padLeft ? BOTTOM_WHEEL_X : 1 - BOTTOM_WHEEL_X;
+  return { layout, flip: wheelX === 0.5 ? padLeft : wheelX < 0.5, wheelX };
+}
 
 export interface WheelSettings {
   homeEnabled: boolean;   // replace the Steam home screen with the wheel
@@ -28,7 +50,8 @@ export interface WheelSettings {
   wheelSizePct: number;       // wheel radius as % of screen width
   visibleCount: number;       // how many games fit on screen at once
   heroScale: number;          // sharp hero art width as % of screen width
-  layout: "side" | "bottom";  // wheel on the screen edge, or rising from the bottom
+  layout: WheelPosition;      // wheel on a screen edge, rising from the bottom, or hanging from the top
+  wheelXPct: number;          // bottom / top: wheel centre, % of width from the left; -1 = the trackpad's corner
   heroV130: boolean;          // side layout: hero art exactly as 1.3.0 drew it (position, backdrop, fades)
   soundEnabled: boolean;      // play Steam's UI sound on each wheel step
   hapticEnabled: boolean;     // tick on the rotating trackpad, like Steam's radial menu
@@ -64,6 +87,7 @@ const DEFAULTS: WheelSettings = {
   visibleCount: 11,
   heroScale: 95,
   layout: "side",
+  wheelXPct: -1,
   heroV130: false,
   soundEnabled: true,
   hapticEnabled: true,
