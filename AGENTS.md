@@ -18,7 +18,8 @@ Notes for coding agents working on Spindeck, a [Decky Loader](https://decky.xyz)
 - `tests/unit/` — unit tests on `src/*.ts` (`node --test`, no dependencies); `tests/py/` — backend tests ([tests/README.md](tests/README.md))
 - `devtools/mock/` — the plugin + real `main.py` in a browser stand-in for Steam / Decky, and the Playwright smoke + E2E tests ([its README](devtools/mock/README.md))
 - `build/` — offline bun build with shims (no `npm install` needed)
-- `.github/workflows/` — `ci.yml` (every push / PR), `release.yml` (`v*` tags)
+- `.github/workflows/` — `ci.yml` (every push / PR), `codeql.yml` (code scanning), `dependency-review.yml` (PRs), `release.yml` (`v*` tags; virus-scans the zip with `scan.yml`: ClamAV always, VirusTotal / MetaDefender when the `VIRUSTOTAL_API_KEY` / `METADEFENDER_API_KEY` secrets are set)
+- `.claude/skills/` — `compatibility`, `localization`, `test-hygiene`, `update-dependencies`, `plan-then-implement`, `token-efficiency`
 
 ## Commands
 
@@ -40,7 +41,7 @@ CI runs the typecheck, the unit and backend tests, the build and the E2E suite o
 - Anything that changes Steam's DOM, input or styles must be undone on unload: register it with `onTeardown()`.
 - New setting: add it to `WheelSettings` + `DEFAULTS` in `settings.ts`, a panel control in `index.tsx`, and its strings in every language (`src/lang/*.ts`). If an existing default changes, add a `settingsVersion` migration.
 - Button handlers on the wheel go through the `latest`/`call` trampolines in `WheelPage.tsx` (Steam's `Focusable` keeps stale handlers otherwise). On the Deck: Ⓨ = `Options`, Ⓧ = `Secondary`, ≡ = `Menu`.
-- Keep `README.md` and `README.ko.md` in sync (controls table, features).
+- Keep `README.md` current (controls table, features).
 - Match the existing code: comments explain *why* (often what was seen on device), constants live in `src/constants.ts`.
 
 ### Steam Deck UI

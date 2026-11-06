@@ -2,7 +2,7 @@
 
 **A rotary-wheel game launcher that replaces the Steam Deck home screen.** Spin your library with a circle on the trackpad and feel every game click by.
 
-[한국어 README](README.ko.md) · [Release notes](RELEASE_NOTES.md)
+[Release notes](RELEASE_NOTES.md)
 
 
 ![Spindeck demo: spinning the wheel and the Ⓨ roulette](docs/demo.gif)

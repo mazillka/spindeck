@@ -59,8 +59,16 @@ jobs:
             release/notes.md
           if-no-files-found: error
 
-  publish:
+  # ClamAV, VirusTotal and MetaDefender (scan.yml); never stops the release, the notes say what it found.
+  scan:
     needs: build
+    uses: ./.github/workflows/scan.yml
+    secrets: inherit
+
+  publish:
+    needs: [build, scan]
+    # A broken scan job never holds a release back: the notes say so.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -68,6 +76,45 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: clamav-report
+
+      - name: Security checks in the notes
+        run: |
+          zip=$(ls spindeck-*.zip)
+          report="ClamAV-scan-${GITHUB_REF_NAME}.txt"
+          link=""
+          [[ -f "$report" ]] && link=" ([scan report](https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${report}))"
+          case "$RESULT" in
+            clean) scan="ClamAV found no threats in \`$zip\`$link." ;;
+            infected) scan="ClamAV flagged \`$zip\`: ${FOUND}$link. It may be a false positive; read the report before you install." ;;
+            error) scan="ClamAV couldn't scan \`$zip\`$link." ;;
+            *) scan="The ClamAV scan didn't run for this release." ;;
+          esac
+          line() { # name result detections url
+            case "$2" in
+              clean) echo "- **$1:** No engine flagged \`$zip\` ($3) — [report]($4)." ;;
+              flagged) echo "- **$1:** $3 engines flagged \`$zip\` — [report]($4). Single detections are often false positives; read the report before you install." ;;
+              pending) echo "- **$1:** hadn't finished when this release was published — [see its report]($4)." ;;
+            esac
+          }
+          {
+            printf '\n## Security checks\n\n- **Virus scan:** %s\n' "$scan"
+            line VirusTotal "$VT_RESULT" "$VT_DETECTIONS" "$VT_URL"
+            line MetaDefender "$MD_RESULT" "$MD_DETECTIONS" "$MD_URL"
+            echo "- **Code analysis:** GitHub [CodeQL](https://github.com/${GITHUB_REPOSITORY}/actions/workflows/codeql.yml) checks the Python and TypeScript code on every change."
+          } >> notes.md
+        env:
+          RESULT: ${{ needs.scan.outputs.result }}
+          FOUND: ${{ needs.scan.outputs.found }}
+          VT_RESULT: ${{ needs.scan.outputs.vt-result }}
+          VT_DETECTIONS: ${{ needs.scan.outputs.vt-detections }}
+          VT_URL: ${{ needs.scan.outputs.vt-url }}
+          MD_RESULT: ${{ needs.scan.outputs.md-result }}
+          MD_DETECTIONS: ${{ needs.scan.outputs.md-detections }}
+          MD_URL: ${{ needs.scan.outputs.md-url }}
 
       # GitHub's own CLI (preinstalled on the runner): no third-party code runs with the write token.
       # A tag like v1.5.0-rc.1 is a pre-release: GitHub never reports it as "latest",
@@ -76,6 +123,7 @@ jobs:
         run: |
           prerelease=()
           [[ "$GITHUB_REF_NAME" == *-* ]] && prerelease=(--prerelease)
-          gh release create "$GITHUB_REF_NAME" spindeck-*.zip --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md "${prerelease[@]}"
+          shopt -s nullglob # the ClamAV report is missing when its scan job broke
+          gh release create "$GITHUB_REF_NAME" spindeck-*.zip ClamAV-scan-*.txt --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md "${prerelease[@]}"
         env:
           GH_TOKEN: ${{ github.token }}

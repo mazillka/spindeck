@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an idea or improvement for Spindeck.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like Spindeck to do?
+      description: The problem it solves or what it would make easier.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: How could it work?
+      description: Where it would go (the wheel, the Quick Access panel) and which buttons you'd use. Mockups welcome.
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else?
+      description: Workarounds you use today, other launchers that do it, or other context.

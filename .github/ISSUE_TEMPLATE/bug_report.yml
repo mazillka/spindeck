@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in Spindeck doesn't work as it should.
+labels: [bug]
+body:
+  - type: input
+    id: spindeck-version
+    attributes:
+      label: Spindeck version
+      description: Shown as "Spindeck vX.Y.Z" at the bottom of Spindeck's Quick Access panel.
+      placeholder: "1.5.0"
+    validations:
+      required: true
+  - type: input
+    id: decky-version
+    attributes:
+      label: Decky Loader version
+      description: Decky → Settings (gear) → General.
+      placeholder: "3.1.10"
+    validations:
+      required: true
+  - type: input
+    id: steamos-version
+    attributes:
+      label: SteamOS version and device
+      description: Steam → Settings → System. Say which device (Steam Deck LCD / OLED, other).
+      placeholder: "3.7.13 Stable, Steam Deck OLED"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Press the STEAM button and go Home
+        2. Spin the wheel to ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors (optional)
+      description: For a crash or error screen, scripts/cef-errors.py in this repository records Steam's UI errors to ~/spindeck-errors.log; attach that file.
