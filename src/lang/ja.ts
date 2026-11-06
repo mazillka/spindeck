@@ -81,8 +81,6 @@ export const ja: Strings = {
   channelStable: "安定版",
   channelPre: "プレリリース版（早く試せる・検証は少なめ）",
   updateChannelDesc: "プレリリース版を選ぶと、安定版になる前の新しいバージョンも案内します。",
-  support: "開発者を支援する (Ko-fi)",
-  supportDesc: "Spindeck を気に入ったら、コーヒー一杯で応援してください",
   sourceAndUpdates: "GitHub: ソースコード · アップデート",
   reload: "ホイールを再読み込み",
   reloadDesc: "画面がおかしくなったときに、ホイールを最初から読み込み直します。設定はそのままです。",

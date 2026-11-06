@@ -1,4 +1,4 @@
-# The project page in docs/ → GitHub Pages (https://justinca92.github.io/spindeck/).
+# The project page in docs/ → GitHub Pages (https://mazillka.github.io/spindeck/).
 # One-time setup: repository Settings → Pages → Source: GitHub Actions.
 name: Deploy website
 

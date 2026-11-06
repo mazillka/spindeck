@@ -82,8 +82,6 @@ export const zh: Strings = {
   channelStable: "稳定版",
   channelPre: "预发布版（抢先体验，测试较少）",
   updateChannelDesc: "选择预发布版后，也会提供尚未成为稳定版的早期版本供你试用。",
-  support: "支持开发者 (Ko-fi)",
-  supportDesc: "如果你喜欢 Spindeck，请用一杯咖啡支持它",
   sourceAndUpdates: "GitHub：源代码 · 更新",
   reload: "重新加载转盘",
   reloadDesc: "画面卡住时，从头重新加载转盘。设置会保留。",

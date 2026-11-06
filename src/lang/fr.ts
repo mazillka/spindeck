@@ -83,8 +83,6 @@ export const fr: Strings = {
   channelStable: "Stable",
   channelPre: "Préversion (en avance, moins testée)",
   updateChannelDesc: "Préversion propose aussi des versions anticipées à essayer avant leur sortie stable.",
-  support: "Soutenir le développeur (Ko-fi)",
-  supportDesc: "Si Spindeck vous plaît, un café l'aide à continuer",
   sourceAndUpdates: "GitHub : code source · mises à jour",
   reload: "Recharger la roue",
   reloadDesc: "Si l'écran se bloque, rechargez la roue depuis zéro. Les réglages sont conservés.",

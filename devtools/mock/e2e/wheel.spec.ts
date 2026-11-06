@@ -112,8 +112,8 @@ test("a setting changed in Quick Access survives a reload (saved by main.py)", a
 const DIGEST = "b".repeat(64);
 const release = (digest: string | null) => ({
   tag_name: "v9.9.9",
-  html_url: "https://github.com/justinca92/spindeck/releases/tag/v9.9.9",
-  assets: [{ name: "spindeck-9.9.9.zip", browser_download_url: "https://github.com/justinca92/spindeck/releases/download/v9.9.9/spindeck-9.9.9.zip", ...(digest ? { digest: `sha256:${digest}` } : {}) }],
+  html_url: "https://github.com/mazillka/spindeck/releases/tag/v9.9.9",
+  assets: [{ name: "spindeck-9.9.9.zip", browser_download_url: "https://github.com/mazillka/spindeck/releases/download/v9.9.9/spindeck-9.9.9.zip", ...(digest ? { digest: `sha256:${digest}` } : {}) }],
 });
 
 test("in-panel update: Decky gets the release zip with GitHub's sha256", async ({ page }) => {
@@ -122,13 +122,13 @@ test("in-panel update: Decky gets the release zip with GitHub's sha256", async (
   await qam(page).getByText("Check for updates").click();
   await qam(page).getByText("Update to v9.9.9").click();
   await expect.poll(() => events(page, "decky")).toEqual([
-    ["utilities/install_plugin", "https://github.com/justinca92/spindeck/releases/download/v9.9.9/spindeck-9.9.9.zip", "Spindeck", "9.9.9", DIGEST, 2],
+    ["utilities/install_plugin", "https://github.com/mazillka/spindeck/releases/download/v9.9.9/spindeck-9.9.9.zip", "Spindeck", "9.9.9", DIGEST, 2],
   ]);
   expect((await events(page, "backend")).flat()).toContain("prepare_update");
 });
 
 test("update channel: Stable ignores pre-releases, Pre-release offers them (and is saved)", async ({ page }) => {
-  const asset = (v: string) => ({ name: `spindeck-${v}.zip`, browser_download_url: `https://github.com/justinca92/spindeck/releases/download/v${v}/spindeck-${v}.zip`, digest: `sha256:${DIGEST}` });
+  const asset = (v: string) => ({ name: `spindeck-${v}.zip`, browser_download_url: `https://github.com/mazillka/spindeck/releases/download/v${v}/spindeck-${v}.zip`, digest: `sha256:${DIGEST}` });
   const stable = { tag_name: "v1.4.1", assets: [asset("1.4.1")] };
   const rc = { tag_name: "v9.9.9-rc.1", prerelease: true, assets: [asset("9.9.9-rc.1")] };
   await page.route("https://api.github.com/**", (r) => r.fulfill({ json: r.request().url().endsWith("/latest") ? stable : [rc, stable] }));

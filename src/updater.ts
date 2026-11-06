@@ -8,11 +8,11 @@ import { useSyncExternalStore } from "react";
 import { PLUGIN_VERSION } from "./links";
 import { debug } from "./log";
 
-const RELEASES_API = "https://api.github.com/repos/justinca92/spindeck/releases/latest";
+const RELEASES_API = "https://api.github.com/repos/mazillka/spindeck/releases/latest";
 /** Pre-release channel: the recent releases, pre-releases included (GitHub's "latest" never is one). */
-const RELEASES_LIST_API = "https://api.github.com/repos/justinca92/spindeck/releases?per_page=20";
+const RELEASES_LIST_API = "https://api.github.com/repos/mazillka/spindeck/releases?per_page=20";
 /** The only place an update zip may come from. */
-const DOWNLOAD_PREFIX = "https://github.com/justinca92/spindeck/releases/download/";
+const DOWNLOAD_PREFIX = "https://github.com/mazillka/spindeck/releases/download/";
 /** Decky's InstallType.UPDATE (0 install, 1 reinstall, 2 update). */
 const INSTALL_TYPE_UPDATE = 2;
 

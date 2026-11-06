@@ -58,7 +58,7 @@ CI runs the typecheck, the unit and backend tests, the build and the E2E suite o
 
 ### Security
 
-- Download only release assets of `justinca92/spindeck`, and keep the SHA-256 check for self-updates (`startUpdate` in `updater.ts` refuses without one).
+- Download only release assets of `mazillka/spindeck`, and keep the SHA-256 check for self-updates (`startUpdate` in `updater.ts` refuses without one).
 - The only network call is the GitHub releases API, made only when the user presses "Check for updates". Don't add background requests (unauthenticated GitHub allows 60 requests/hour per IP).
 - Workflow actions are pinned to commit SHAs with a `# vX.Y.Z` comment; only `publish` in `release.yml` gets `contents: write`. Keep both when editing workflows.
 

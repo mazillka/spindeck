@@ -81,8 +81,6 @@ export const en: Strings = {
   channelStable: "Stable",
   channelPre: "Pre-release (early, less tested)",
   updateChannelDesc: "Pre-release also offers early versions to try before they're stable.",
-  support: "Support the developer (Ko-fi)",
-  supportDesc: "If you enjoy Spindeck, a coffee keeps it going",
   sourceAndUpdates: "GitHub: source code · updates",
   reload: "Reload the wheel",
   reloadDesc: "If the screen gets stuck, reload the wheel from scratch. Settings are kept.",

@@ -4,7 +4,6 @@
 
 [한국어 README](README.ko.md) · [Release notes](RELEASE_NOTES.md)
 
-[![Support on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jhw0806)
 
 ![Spindeck demo: spinning the wheel and the Ⓨ roulette](docs/demo.gif)
 
@@ -46,7 +45,7 @@ Spindeck isn't in the Decky store. It installs from this repository's releases.
 1. Install [Decky Loader](https://decky.xyz) if you haven't.
 2. In game mode, open Quick Access (…) → Decky → ⚙️ settings → **General**, and turn on **Developer mode**.
 3. Open the **Developer** tab and choose one of:
-   - **Install Plugin from URL**: paste the link to `spindeck-x.y.z.zip` from the [latest release](https://github.com/justinca92/spindeck/releases/latest).
+   - **Install Plugin from URL**: paste the link to `spindeck-x.y.z.zip` from the [latest release](https://github.com/mazillka/spindeck/releases/latest).
    - **Install Plugin from ZIP**: pick the zip after downloading it on the Deck.
 4. Open Quick Access → Spindeck. The wheel replaces the home screen right away.
 
@@ -66,11 +65,10 @@ Spindeck never changes Steam's settings, controller layouts or files.
 - It relies on Steam's internal UI, which isn't a public API. A Steam client update can change it. The plugin then falls back to Steam's home until it's updated.
 - Tested on Steam Deck OLED and Steam Deck LCD in game mode.
 
-## Support
+## Feedback
 
-Spindeck is free and open source. If you enjoy it, you can [buy me a coffee on Ko-fi](https://ko-fi.com/jhw0806) ☕. There's also a button in the plugin's About section.
 
-Bug reports and ideas: [Issues](https://github.com/justinca92/spindeck/issues).
+Bug reports and ideas: [Issues](https://github.com/mazillka/spindeck/issues).
 
 ## Building
 

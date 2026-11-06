@@ -82,8 +82,6 @@ export const ko = {
   channelStable: "안정 버전",
   channelPre: "사전 출시 버전 (먼저 써 보기, 덜 검증됨)",
   updateChannelDesc: "사전 출시 버전을 고르면 안정 버전이 나오기 전에 미리 써 볼 수 있는 버전도 알려 줘요.",
-  support: "개발자 후원하기 (Ko-fi)",
-  supportDesc: "Spindeck이 마음에 드셨다면 커피 한 잔으로 응원해 주세요",
   sourceAndUpdates: "GitHub: 소스 코드 · 업데이트",
   reload: "휠 새로고침",
   reloadDesc: "화면이 꼬였을 때 휠을 처음 상태로 다시 불러와요. 설정은 그대로예요.",

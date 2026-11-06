@@ -19,7 +19,7 @@ import { openHangulPad } from "./HangulPad";
 import { useLang, detected, LangSetting, LANGS } from "./locale";
 import { useT, Strings } from "./i18n";
 import { HOME_ROUTE, installHomePatch, removeHomePatch } from "./homePatch";
-import { KOFI_URL, PLUGIN_VERSION, REPO_URL } from "./links";
+import { PLUGIN_VERSION, REPO_URL } from "./links";
 import { levelToDb, wheelTick } from "./haptics";
 import { SafeBoundary, teardownAll } from "./safety";
 import { sweepLeftovers } from "./steamDom";
@@ -390,11 +390,6 @@ function QuickAccessPanel() {
         <PanelSectionRow>
           <ButtonItem layout="below" onClick={() => openExternal(REPO_URL)}>
             <IconLabel icon={Icons.github}>{t.sourceAndUpdates}</IconLabel>
-          </ButtonItem>
-        </PanelSectionRow>
-        <PanelSectionRow>
-          <ButtonItem layout="below" description={t.supportDesc} onClick={() => openExternal(KOFI_URL)}>
-            <IconLabel icon={Icons.coffee}>{t.support}</IconLabel>
           </ButtonItem>
         </PanelSectionRow>
         <PanelSectionRow>

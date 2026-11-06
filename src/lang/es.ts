@@ -83,8 +83,6 @@ export const es: Strings = {
   channelStable: "Estable",
   channelPre: "Versión preliminar (antes, menos probada)",
   updateChannelDesc: "Versión preliminar también ofrece versiones tempranas para probar antes de que sean estables.",
-  support: "Apoyar al desarrollador (Ko-fi)",
-  supportDesc: "Si te gusta Spindeck, un café ayuda a mantenerlo",
   sourceAndUpdates: "GitHub: código fuente · actualizaciones",
   reload: "Recargar la rueda",
   reloadDesc: "Si la pantalla se queda atascada, recarga la rueda desde cero. Los ajustes se conservan.",

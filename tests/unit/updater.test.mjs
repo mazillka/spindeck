@@ -8,7 +8,7 @@ globalThis.backend = { prepare_update: async () => true };
 const { newer, checkNow, useUpdateCheck, startUpdate } = await import("../../src/updater.ts");
 
 const DIGEST = "a".repeat(64);
-const ZIP = "https://github.com/justinca92/spindeck/releases/download/v1.5.0/spindeck-1.5.0.zip";
+const ZIP = "https://github.com/mazillka/spindeck/releases/download/v1.5.0/spindeck-1.5.0.zip";
 function release({ tag = "v1.5.0", assets = [{ name: "spindeck-1.5.0.zip", browser_download_url: ZIP, digest: `sha256:${DIGEST}` }], ok = true } = {}) {
   globalThis.fetch = async () => ({ ok, status: ok ? 200 : 403, json: async () => ({ tag_name: tag, assets, html_url: "https://github.com/x" }) });
 }
@@ -57,8 +57,8 @@ test("check: API error or no plugin zip → error", async () => {
 
 const rel = (tag, extra = {}) => ({
   tag_name: tag,
-  html_url: `https://github.com/justinca92/spindeck/releases/tag/${tag}`,
-  assets: [{ name: `spindeck-${tag.slice(1)}.zip`, browser_download_url: `https://github.com/justinca92/spindeck/releases/download/${tag}/spindeck-${tag.slice(1)}.zip`, digest: `sha256:${DIGEST}` }],
+  html_url: `https://github.com/mazillka/spindeck/releases/tag/${tag}`,
+  assets: [{ name: `spindeck-${tag.slice(1)}.zip`, browser_download_url: `https://github.com/mazillka/spindeck/releases/download/${tag}/spindeck-${tag.slice(1)}.zip`, digest: `sha256:${DIGEST}` }],
   ...extra,
 });
 function serve(latest, list) {

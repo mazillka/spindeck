@@ -4,7 +4,6 @@
 
 [English README](README.md) · [릴리스 노트](RELEASE_NOTES.md)
 
-[![Ko-fi로 후원하기](https://img.shields.io/badge/후원-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jhw0806)
 
 ![Spindeck 데모: 휠 돌리기와 Ⓨ 룰렛](docs/demo.gif)
 
@@ -46,7 +45,7 @@ Spindeck은 데키 스토어에 없어요. 이 저장소의 릴리스에서 설�
 1. 아직 없다면 [Decky Loader](https://decky.xyz)를 설치하세요.
 2. 게임 모드에서 빠른 설정(…) → Decky → ⚙️ 설정 → **일반(General)** 으로 가서 **개발자 모드(Developer mode)** 를 켜세요.
 3. **개발자(Developer)** 탭에서 둘 중 하나를 고르세요.
-   - **Install Plugin from URL:** [최신 릴리스](https://github.com/justinca92/spindeck/releases/latest)의 `spindeck-x.y.z.zip` 링크를 붙여 넣어요.
+   - **Install Plugin from URL:** [최신 릴리스](https://github.com/mazillka/spindeck/releases/latest)의 `spindeck-x.y.z.zip` 링크를 붙여 넣어요.
    - **Install Plugin from ZIP:** 스팀덱에서 zip을 받은 뒤 그 파일을 골라요.
 4. 빠른 설정 → Spindeck을 열면, 홈 화면이 바로 휠로 바뀌어요.
 
@@ -66,11 +65,10 @@ Spindeck은 스팀 설정, 컨트롤러 레이아웃, 스팀 파일을 바꾸지
 - 스팀 내부 화면 구조에 기대고 있는데, 이건 공개 API가 아니에요. 스팀 업데이트로 바뀔 수 있고, 그러면 플러그인이 업데이트될 때까지 원래 스팀 홈으로 돌아가요.
 - 스팀덱 OLED와 스팀덱 LCD 게임 모드에서 테스트했어요.
 
-## 후원
+## 피드백
 
-Spindeck은 무료 오픈소스예요. 마음에 드셨다면 [Ko-fi로 커피 한 잔](https://ko-fi.com/jhw0806) 사주세요 ☕. 플러그인 패널의 '정보' 항목에도 후원 버튼이 있어요.
 
-버그 제보와 아이디어는 [Issues](https://github.com/justinca92/spindeck/issues)에 남겨 주세요.
+버그 제보와 아이디어는 [Issues](https://github.com/mazillka/spindeck/issues)에 남겨 주세요.
 
 ## 만든 방법
 
